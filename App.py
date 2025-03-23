@@ -75,10 +75,10 @@ def main():
     
     with tab_examples:
         example_images = {
-            "Chip 1": "images/Chip1.jpg",
-            "Chip 2": "images/Chip2.jpg",
-            "Code 1": "images/Code1.jpg",
-            "Code 2": "images/Code2.jpg"
+            "Chip 1": "images/Chip 1.jpg",
+            "Chip 2": "images/Chip 2.jpg",
+            "Code 1": "images/Code 1.jpg",
+            "Code 2": "images/Code 2.jpg"
         }
         
         cols = st.columns(4)
