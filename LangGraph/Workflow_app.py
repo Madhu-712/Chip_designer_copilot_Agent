@@ -2,10 +2,11 @@
 
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroqimport re
+from langchain_groq import ChatGroq
+import re
 from typing import List
 
-def llm_call(prompt: str, system_prompt: str = "", llm: ChatGoogleGenerativeAI = None) -> str:
+def llm_call(prompt: str, system_prompt: str = "", llm: ChatGroq = None) -> str:
     """Calls the LLM with the given prompt and returns the response."""
     if system_prompt:
         prompt = f"{system_prompt}\n{prompt}"
