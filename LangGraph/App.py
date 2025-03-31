@@ -39,7 +39,7 @@ def chain(input: str, prompts: List[str], llm: ChatGoogleGenerativeAI) -> str:
     return result
 
 def main():
-    st.title("Chip Design Copilot")
+    st.title("Chip Design Copilot Agentic Workflow using LangGraph")
 
     # Input for Verilog code
     verilog_code = st.text_area("Enter your Verilog code here:", value="""
