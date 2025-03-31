@@ -2,11 +2,10 @@
 
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
 import re
 from typing import List
 
-def llm_call(prompt: str, system_prompt: str = "", llm: ChatGroq = None) -> str:
+def llm_call(prompt: str, system_prompt: str = "", llm: ChatGoogleGenerativeAI = None) -> str:
     """Calls the LLM with the given prompt and returns the response."""
     if system_prompt:
         prompt = f"{system_prompt}\n{prompt}"
@@ -66,16 +65,20 @@ data_processing_steps = [
 ]
 
 # Define the initial input (Designcopilot)
-Designcopilot = """Expert Chip Design Copilot Agent specializing in analyzing Verilog code. Your role is to assist users in understanding and improving their chip designs by providing detailed analysis, insights, and optimization suggestions. You combine technical knowledge to deliver comprehensive and actionable information for users. Your guidance accelerates the design process, offering prescriptive insights and recommendations. Return your response in Markdown format."""
+Designcopilot = """Expert Chip Design Copilot Agent specializing in analyzing Verilog code. Your role is to assist users in understanding and improving their chip designs by providing detailed analysis and suggestions for optimization and debugging. Begin by analyzing the Verilog code provided by the user."""
 
 # Button to trigger report generation
 if st.button("Generate Report"):
-    # Initialize Gemini
-   # llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)
-     # Initialize Groq LLM
-    llm = ChatGroq(model_name="deepseek-r1-distill-qwen-32b", temperature=0)  # Replace with your Groq model
+    # Initialize Google Generative AI
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)  # Replace with your Google model
     # Perform prompt chaining
     formatted_result = chain(Designcopilot, data_processing_steps, llm)
 
     # Display the generated report
     st.markdown(formatted_result)
+
+
+
+
+
+
