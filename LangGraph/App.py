@@ -41,22 +41,11 @@ def chain(input: str, prompts: List[str], llm: ChatGoogleGenerativeAI) -> str:
 def main():
     st.title("Chip Design Copilot Agentic Workflow using LangGraph")
 
-    # Input for Verilog code
-    verilog_code = st.text_area("Enter your Verilog code here:", value="""
-    // Example Verilog code
-    module example (
-      input clk,
-      input rst,
-      // ... other inputs and outputs
-    );
-    // ... your Verilog code ...
-    endmodule
-    """)
+    
 
     # Define the prompt chaining steps
     data_processing_steps = [
-        """Analyze the uploaded Verilog code, offer suggestions for optimization and debugging.""",
-        f"""Verilog code: \n""",
+        """Act like a expert chip design Copilot \n""",
         """Highlight any potential issues or areas for improvement in the design, including:
             * Performance
             * Reliability
