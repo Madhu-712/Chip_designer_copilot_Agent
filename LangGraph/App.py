@@ -49,8 +49,10 @@ Designcopilot = """Expert Chip Design Copilot Agent specializing in chip design 
 
 # Button to trigger report generation
 if st.button("Generate Report"):
+    #Initialize Gemini model
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)
     # Initialize Groq LLM
-    llm = ChatGroq(model_name="deepseek-r1-distill-qwen-32b", temperature=0)  # Replace with your Groq model
+    #llm = ChatGroq(model_name="deepseek-r1-distill-qwen-32b", temperature=0)  # Replace with your Groq model
     # Perform prompt chaining
     formatted_result = chain(Designcopilot, data_processing_steps, llm)
 
