@@ -1,0 +1,5 @@
+
+streamlit
+langchain
+langchain_groq
+langchain_google_genai # optional, only if you want to use Gemini
