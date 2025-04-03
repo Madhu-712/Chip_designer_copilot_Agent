@@ -4,3 +4,4 @@ Pillow
 phidata
 google-generativeai
 tavily-python
+gTTS
