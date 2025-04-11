@@ -74,11 +74,11 @@ if prompt := st.text_input("Ask me anything about chip design:", key="user_input
     st.session_state.messages.append({"role": "user", "content": prompt})
     config = {"configurable": {"thread_id": "1"}}
     for event in graph.stream({"messages": st.session_state.messages}, config=config):
-    messages = event.get("messages", [])
+        messages = event.get("messages", [])
     if messages:  # Check if the list is not empty
-        response_message = messages[-1]
+       response_message = messages[-1]
     
-        st.session_state.messages.append({"role": "assistant", "content": response_message.content})
+       st.session_state.messages.append({"role": "assistant", "content": response_message.content})
             with st.chat_message("assistant"):
                 st.markdown(response_message.content)
     else:
