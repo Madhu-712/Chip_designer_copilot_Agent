@@ -25,19 +25,32 @@ class State(TypedDict):
 
 graph_builder = StateGraph(State)
 
-# Human assistance tool
+
+
+# Define the human assistance function
 @tool
 def human_assistance(query: str) -> str:
-    """Request assistance from a human via Streamlit."""
-    human_input = st.text_input(f"Human assistance needed for: {query}", key=f"human_input_{query}")
-    if human_input:
-        return human_input
-    return "Waiting for human input..."
+    last_msg = state["messages"][-1]
+    st.write("Bot:", last_msg.content)
+    user_input = st.text_input("You: ", key="user_input_{}".format(len(state["messages"])))
+
+    if st.button("Send", key="send_button_{}".format(len(state["messages"]))):
+        if user_input.lower() in {"q", "quit", "exit", "goodbye"}:
+            state["finished"] = True
+        state["messages"].append(HumanMessage(content=user_input)) # Corrected: User input as HumanMessage
+    return state
+
+# Define the exit condition function
+def maybe_exit_human_node(query: str) -> Literal["chatbot", "__end__"]:
+    if state.get("finished", False):
+        return END
+    else:
+        return "chatbot"
 
 # Initialize LLM and Tools
 tool = TavilySearchResults(max_results=2)
 tools = [tool, human_assistance]
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)  # Consider adding a max_tokens parameter
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.0)  # Consider adding a max_tokens parameter
 llm_with_tools = llm.bind_tools(tools)
 
 # Chatbot function (Improved handling of tool calls and errors)
