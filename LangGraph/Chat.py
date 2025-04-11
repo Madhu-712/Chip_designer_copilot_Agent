@@ -3,7 +3,8 @@ import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 # Initialize the LLM
-llm = ChatGoogleGenerativeAI(temperature=0.0)
+llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)
+
 
 st.title("Designer Copilot Agent")
 
