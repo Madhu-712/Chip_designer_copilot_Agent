@@ -99,7 +99,7 @@ if user_input := st.chat_input("Hi, I Am Md.How can you assist you with chip des
 
         for event in events:
             if "messages" in event:
-                response_content = event["messages"][-1]["content"]  # Corrected: Access content from dictionary
+                response_content = event["messages"][-1].["content"]  # Corrected: Access content from dictionary
                 st.session_state.messages.append(
                     {"role": "assistant", "content": response_content}
                 )
