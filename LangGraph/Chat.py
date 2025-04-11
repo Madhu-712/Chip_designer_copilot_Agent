@@ -72,14 +72,19 @@ if "messages" not in st.session_state:
 # Main chat loop
 if prompt := st.text_input("Ask me anything about chip design:", key="user_input"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    config = {"configurable": {"thread_id": "1"}}
+   config = {"configurable": {"thread_id": "1"}}
     for event in graph.stream({"messages": st.session_state.messages}, config=config):
-        response_message = event.get("messages", [])[-1]
-        if response_message:
-            st.session_state.messages.append({"role": "assistant", "content": response_message.content})
+    messages = event.get("messages", [])
+    if messages:  # Check if the list is not empty
+        response_message = messages[-1]
+    
+        st.session_state.messages.append({"role": "assistant", "content": response_message.content})
             with st.chat_message("assistant"):
                 st.markdown(response_message.content)
-
+    else:
+        # Handle the case where there are no messages in the event
+        st.warning("No message found in this event.")  # Or any appropriate handling
+    
 # Display existing chat history
 for message in st.session_state.messages:
     if message["role"] == "user":
@@ -88,7 +93,6 @@ for message in st.session_state.messages:
     elif message["role"] == "assistant":
         with st.chat_message("assistant"):
             st.markdown(message["content"])
-
 
 
 
