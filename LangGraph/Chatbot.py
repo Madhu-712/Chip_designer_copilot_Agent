@@ -1,5 +1,4 @@
 
-# Display and handle chat history
 
 
 
@@ -89,11 +88,14 @@ if "messages" not in st.session_state:
     
 for message in st.session_state.messages:
     if isinstance(message, HumanMessage):  # Check if it's a HumanMessage
-        role = message.role  # Access the role using .role property
+        if hasattr(message, "role"):
+            role = message.role  # Access the role if it exists as an attribute
+        else:
+            role = message.type  # Attempt to access using .type if .role is not found 
     elif isinstance(message, dict) and "role" in message:  # Check if it's a dictionary with 'role'
         role = message["role"]
     else:
-        role = "unknown"  # Or handle other message types appropriately
+        role = "unknown" 
 
     with st.chat_message(role):
         if isinstance(message, HumanMessage):
