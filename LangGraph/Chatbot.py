@@ -97,13 +97,16 @@ for message in st.session_state.messages:
         role = "unknown" 
 
    
-    
     with st.chat_message(role):
-        if isinstance(message, HumanMessage):  # Check if message is a HumanMessage
-            st.markdown(message.content)   # Access content directly using .content
+        if isinstance(message, HumanMessage):
+            st.markdown(message.content)  # Access content for HumanMessage
+        elif isinstance(message, AIMessage):  # Check if it's an AIMessage
+            st.markdown(message.content)  # Access content for AIMessage
+        elif isinstance(message, dict) and "content" in message:  # Check for dictionary
+            st.markdown(message["content"])
         else:
-            st.markdown(message.get("content", ""))  # Access content using get() for dictionaries to prevent KeyErrors
-
+            st.markdown(str(message))  
+    
 
 
 
