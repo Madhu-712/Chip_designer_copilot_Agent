@@ -72,7 +72,7 @@ if "messages" not in st.session_state:
 # Main chat loop
 if prompt := st.text_input("Ask me anything about chip design:", key="user_input"):
     st.session_state.messages.append({"role": "user", "content": prompt})
-   config = {"configurable": {"thread_id": "1"}}
+    config = {"configurable": {"thread_id": "1"}}
     for event in graph.stream({"messages": st.session_state.messages}, config=config):
     messages = event.get("messages", [])
     if messages:  # Check if the list is not empty
