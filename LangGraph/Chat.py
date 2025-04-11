@@ -1,3 +1,4 @@
+
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -25,32 +26,19 @@ class State(TypedDict):
 
 graph_builder = StateGraph(State)
 
-
-
-# Define the human assistance function
+# Human assistance tool
 @tool
 def human_assistance(query: str) -> str:
-    last_msg = state["messages"][-1]
-    st.write("Bot:", last_msg.content)
-    user_input = st.text_input("You: ", key="user_input_{}".format(len(state["messages"])))
-
-    if st.button("Send", key="send_button_{}".format(len(state["messages"]))):
-        if user_input.lower() in {"q", "quit", "exit", "goodbye"}:
-            state["finished"] = True
-        state["messages"].append(HumanMessage(content=user_input)) # Corrected: User input as HumanMessage
-    return state
-
-# Define the exit condition function
-def maybe_exit_human_node(query: str) -> Literal["chatbot", "__end__"]:
-    if state.get("finished", False):
-        return END
-    else:
-        return "chatbot"
+    """Request assistance from a human via Streamlit."""
+    human_input = st.text_input(f"Human assistance needed for: {query}", key=f"human_input_{query}")
+    if human_input:
+        return human_input
+    return "Waiting for human input..."
 
 # Initialize LLM and Tools
 tool = TavilySearchResults(max_results=2)
 tools = [tool, human_assistance]
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.0)  # Consider adding a max_tokens parameter
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)  # Consider adding a max_tokens parameter
 llm_with_tools = llm.bind_tools(tools)
 
 # Chatbot function (Improved handling of tool calls and errors)
@@ -96,82 +84,23 @@ for message in st.session_state.messages:
         st.markdown(message["content"])
 
 if user_input := st.chat_input("Hi, I Am Md.How can you assist you with chip design"):
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    if user_input: # Check if user_input is not None or empty
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
 
-    config = {"configurable": {"thread_id": "1"}, "recursion_limit": 100}
-    events = graph.stream(  
-        {"messages": [{"role": "user", "content": user_input}]},  
-        config,
-        stream_mode="values",
-    )
+        config = {"configurable": {"thread_id": "1"}, "recursion_limit": 100}
+        events = graph.stream(  # Corrected: use 'graph' instead of 'chat_with_human_graph'
+            {"messages": [{"role": "user", "content": user_input}]},  # Corrected: Changed HumanMessage to a dict
+            config,
+            stream_mode="values",
+        )
 
-    for event in events:
-        if "messages" in event:
-            response_content = event["messages"][-1]["content"]  
-            st.session_state.messages.append(
-                {"role": "assistant", "content": response_content}
-            )
-            with st.chat_message("assistant"):
-                st.markdown(response_content)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        for event in events:
+            if "messages" in event:
+                response_content = event["messages"][-1]["content"]  # Corrected: Access content from dictionary
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": response_content}
+                )
+                with st.chat_message("assistant"):
+                    st.markdown(response_content)
