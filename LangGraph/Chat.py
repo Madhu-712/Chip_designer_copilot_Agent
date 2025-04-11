@@ -90,8 +90,9 @@ if user_input := st.chat_input("Hi, I Am Md.How can you assist you with chip des
             st.markdown(user_input)
 
         config = {"configurable": {"thread_id": "1"}, "recursion_limit": 100}
-        events = graph.stream(  # Corrected: use 'graph' instead of 'chat_with_human_graph'
-            {"messages": [{"role": "user", "content": user_input}]},  # Corrected: Changed HumanMessage to a dict
+        events = graph.stream(  
+         { "messages": [HumanMessage(content=user_input)]},
+                
             config,
             stream_mode="values",
         )
