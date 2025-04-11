@@ -91,13 +91,13 @@ if prompt := st.text_input("Ask me anything about chip design:", key="user_input
             st.warning("No message found in this event.")
 
 # Display existing chat history
-for message in st.session_state.messages:
-    if message["role"] == "user":
-        with st.chat_message("user"):
-            st.markdown(message["content"])
-    elif message["role"] == "assistant":
-        with st.chat_message("assistant"):
-            st.markdown(message["content"])
+#for message in st.session_state.messages:
+    #if message["role"] == "user":
+      # with st.chat_message("user"):
+            #st.markdown(message["content"])
+    #elif message["role"] == "assistant":
+        #with st.chat_message("assistant"):
+           # st.markdown(message["content"])
 
 
 
