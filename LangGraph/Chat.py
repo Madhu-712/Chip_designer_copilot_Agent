@@ -8,8 +8,15 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.types import Command
 import os
-os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
-os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
+
+# Ensure secrets are loaded correctly;  adapt as needed for your Streamlit setup
+try:
+    os.environ['TAVILY_API_KEY'] = st.secrets["TAVILY_KEY"]
+    os.environ['GOOGLE_API_KEY'] = st.secrets["GEMINI_KEY"]
+except KeyError as e:
+    st.error(f"Missing secret key: {e}. Please configure your Streamlit secrets.")
+    st.stop()
+
 
 # Define State and Graph
 class State(TypedDict):
@@ -29,7 +36,7 @@ def human_assistance(query: str) -> str:
 # Initialize LLM and Tools
 tool = TavilySearchResults(max_results=2)
 tools = [tool, human_assistance]
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)  #Consider adding a max_tokens parameter
+llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.0)  # Consider adding a max_tokens parameter
 llm_with_tools = llm.bind_tools(tools)
 
 # Chatbot function (Improved handling of tool calls and errors)
@@ -42,7 +49,7 @@ def chatbot(state: State):
                 state["messages"].append({"role": "tool", "content": tool_result})
             except Exception as e:
                 state["messages"].append({"role": "tool", "content": f"Error using tool: {e}"})
-        return {"messages": [message]}  #Return the LLM's response, not the last tool call
+        return {"messages": [message]}  # Return the LLM's response, not the last tool call
     except Exception as e:
         return {"messages": [{"role": "assistant", "content": f"An error occurred: {e}"}]}
 
@@ -75,24 +82,34 @@ if prompt := st.text_input("Ask me anything about chip design:", key="user_input
     config = {"configurable": {"thread_id": "1"}}
     for event in graph.stream({"messages": st.session_state.messages}, config=config):
         messages = event.get("messages", [])
-    if messages:  # Check if the list is not empty
-       response_message = messages[-1]
-    
-       st.session_state.messages.append({"role": "assistant", "content": response_message.content})
-          with st.chat_message("assistant"):
-               st.markdown(response_message.content)
-    else:
-        # Handle the case where there are no messages in the event
-        st.warning("No message found in this event.")  # Or any appropriate handling
-    
+        if messages:  # Check if the list is not empty
+            response_message = messages[-1]
+            st.session_state.messages.append({"role": "assistant", "content": response_message.content})
+            with st.chat_message("assistant"):
+                st.markdown(response_message.content)
+        else:
+            st.warning("No message found in this event.")
+
 # Display existing chat history
 for message in st.session_state.messages:
     if message["role"] == "user":
         with st.chat_message("user"):
-             st.markdown(message["content"])
+            st.markdown(message["content"])
     elif message["role"] == "assistant":
         with st.chat_message("assistant"):
-             st.markdown(message["content"])
+            st.markdown(message["content"])
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
