@@ -1,6 +1,5 @@
 
 
-#!pip install langchain_community
 
 
 
