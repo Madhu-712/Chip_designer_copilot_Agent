@@ -79,8 +79,8 @@ if prompt := st.text_input("Ask me anything about chip design:", key="user_input
        response_message = messages[-1]
     
        st.session_state.messages.append({"role": "assistant", "content": response_message.content})
-            with st.chat_message("assistant"):
-                st.markdown(response_message.content)
+          with st.chat_message("assistant"):
+               st.markdown(response_message.content)
     else:
         # Handle the case where there are no messages in the event
         st.warning("No message found in this event.")  # Or any appropriate handling
@@ -89,10 +89,10 @@ if prompt := st.text_input("Ask me anything about chip design:", key="user_input
 for message in st.session_state.messages:
     if message["role"] == "user":
         with st.chat_message("user"):
-            st.markdown(message["content"])
+             st.markdown(message["content"])
     elif message["role"] == "assistant":
         with st.chat_message("assistant"):
-            st.markdown(message["content"])
+             st.markdown(message["content"])
 
 
 
