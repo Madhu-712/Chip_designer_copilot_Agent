@@ -1,4 +1,10 @@
 
+# Display and handle chat history
+
+
+
+
+
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -80,10 +86,22 @@ st.markdown("- Can you suggest ways to improve the reliability of my ASIC?")
 # Display and handle chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
-
+    
 for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+    if isinstance(message, HumanMessage):  # Check if it's a HumanMessage
+        role = message.role  # Access the role using .role property
+    elif isinstance(message, dict) and "role" in message:  # Check if it's a dictionary with 'role'
+        role = message["role"]
+    else:
+        role = "unknown"  # Or handle other message types appropriately
+
+    with st.chat_message(role):
+        if isinstance(message, HumanMessage):
+            st.markdown(message.content)  # Use .content for HumanMessage
+        else:
+            st.markdown(message["content"])
+
+
 
 # User input and chatbot response
 if user_input := st.chat_input("Enter your message:"):
