@@ -12,7 +12,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.types import Command
 import os
-from langchain.schema import HumanMessage  # Import HumanMessage
+from langchain.schema import HumanMessage,AIMessage # Import HumanMessage
 
 # Ensure secrets are loaded correctly
 try:
@@ -96,7 +96,6 @@ for message in st.session_state.messages:
     else:
         role = "unknown" 
 
-   
     with st.chat_message(role):
         if isinstance(message, HumanMessage):
             st.markdown(message.content)  # Access content for HumanMessage
@@ -106,6 +105,7 @@ for message in st.session_state.messages:
             st.markdown(message["content"])
         else:
             st.markdown(str(message))  
+    
     
 
 
