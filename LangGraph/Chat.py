@@ -65,8 +65,10 @@ graph_builder.add_edge(START, "chatbot")
 # Compile the graph
 graph = graph_builder.compile()
 
-# Streamlit UI
-st.title("Chip Design Chatbot")
+#Streamlit app
+st.title("Chip Design Copilot Chatbot")
+
+
 st.markdown("**Example Queries:**")
 st.markdown("- How can I optimize the power consumption of my chip design?")
 st.markdown("- What are the latest trends in AI-based chip design?")
@@ -75,30 +77,35 @@ st.markdown("- Can you suggest ways to improve the reliability of my ASIC?")
 # Initialize chat history in session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+         st.markdown(message["content"])
 
-# Main chat loop
-if prompt := st.text_input("Ask me anything about chip design:", key="user_input"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    st.button("generate")
-    config = {"configurable": {"thread_id": "1"}}
-    for event in graph.stream({"messages": st.session_state.messages}, config=config):
-        messages = event.get("messages", [])
-        if messages:  # Check if the list is not empty
-            response_message = messages[-1]
-            st.session_state.messages.append({"role": "assistant", "content": response_message.content})
+if user_input := st.chat_input("Hi, I Am Md.How can you assist you with chip design"):
+   st.session_state.messages.append({"role": "user", "content": user_input})
+    with st.chat_message("user"):
+         st.markdown(user_input)
+
+config = {"configurable": {"thread_id": "1"}, "recursion_limit": 100}
+    events = chat_with_human_graph.stream(
+        {"messages": [HumanMessage(content=user_input)]},
+        config,
+        stream_mode="values",
+    )
+
+    for event in events:
+        if "messages" in event:
+            response_content = event["messages"][-1].content
+            st.session_state.messages.append(
+                {"role": "assistant", "content": response_content}
+            )
             with st.chat_message("assistant"):
-                st.markdown(response_message.content)
-        else:
-            st.warning("No message found in this event.")
+                st.markdown(response_content)
 
-# Display existing chat history
-#for message in st.session_state.messages:
-    #if message["role"] == "user":
-      # with st.chat_message("user"):
-            #st.markdown(message["content"])
-    #elif message["role"] == "assistant":
-        #with st.chat_message("assistant"):
-           # st.markdown(message["content"])
+
+
+
+
 
 
 
