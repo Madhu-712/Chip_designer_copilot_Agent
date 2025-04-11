@@ -8,6 +8,7 @@ from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.types import Command
 import os
+from langchain_core.messages import HumanMessage  # Import HumanMessage
 
 # Ensure secrets are loaded correctly;  adapt as needed for your Streamlit setup
 try:
@@ -65,7 +66,7 @@ graph_builder.add_edge(START, "chatbot")
 # Compile the graph
 graph = graph_builder.compile()
 
-#Streamlit app
+# Streamlit app
 st.title("Chip Design Copilot Chatbot")
 
 
@@ -79,28 +80,35 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-         st.markdown(message["content"])
+        st.markdown(message["content"])
 
 if user_input := st.chat_input("Hi, I Am Md.How can you assist you with chip design"):
-   st.session_state.messages.append({"role": "user", "content": user_input})
+    st.session_state.messages.append({"role": "user", "content": user_input})
     with st.chat_message("user"):
-         st.markdown(user_input)
+        st.markdown(user_input)
 
-config = {"configurable": {"thread_id": "1"}, "recursion_limit": 100}
-    events = chat_with_human_graph.stream(
-        {"messages": [HumanMessage(content=user_input)]},
+    config = {"configurable": {"thread_id": "1"}, "recursion_limit": 100}
+    events = graph.stream(  # Corrected: use 'graph' instead of 'chat_with_human_graph'
+        {"messages": [{"role": "user", "content": user_input}]},  # Corrected: Changed HumanMessage to a dict
         config,
         stream_mode="values",
     )
 
     for event in events:
         if "messages" in event:
-            response_content = event["messages"][-1].content
+            response_content = event["messages"][-1]["content"]  # Corrected: Access content from dictionary
             st.session_state.messages.append(
                 {"role": "assistant", "content": response_content}
             )
             with st.chat_message("assistant"):
                 st.markdown(response_content)
+
+
+
+
+
+
+
 
 
 
