@@ -2,8 +2,6 @@
 
 
 
-
-
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_community.tools.tavily_search import TavilySearchResults
@@ -86,6 +84,7 @@ st.markdown("- Can you suggest ways to improve the reliability of my ASIC?")
 if "messages" not in st.session_state:
     st.session_state.messages = []
     
+
 for message in st.session_state.messages:
     if isinstance(message, HumanMessage):  # Check if it's a HumanMessage
         if hasattr(message, "role"):
@@ -97,11 +96,14 @@ for message in st.session_state.messages:
     else:
         role = "unknown" 
 
+   
+    
     with st.chat_message(role):
-        if isinstance(message, HumanMessage):
-            st.markdown(message.content)  # Use .content for HumanMessage
+        if isinstance(message, HumanMessage):  # Check if message is a HumanMessage
+            st.markdown(message.content)   # Access content directly using .content
         else:
-            st.markdown(message["content"])
+            st.markdown(message.get("content", ""))  # Access content using get() for dictionaries to prevent KeyErrors
+
 
 
 
