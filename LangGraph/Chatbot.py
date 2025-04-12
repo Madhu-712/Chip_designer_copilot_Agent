@@ -120,6 +120,7 @@ if user_input := st.chat_input("Enter your message:"):
     state = {"messages": st.session_state.messages}  
     updated_state = graph.invoke(state) 
     st.session_state.messages = updated_state["messages"]
+    
 
 
 
