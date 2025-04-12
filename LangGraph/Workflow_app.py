@@ -26,7 +26,7 @@ def chain(input: str, prompts: List[str], llm: ChatGoogleGenerativeAI) -> str:
         print(result)
     return result
 
-st.title("Chip Design Copilot")
+st.title("Chip Design Copilot report generator based on Agentic Workflows")
 
 # Input for Verilog code
 verilog_code = st.text_area("Enter your Verilog code here:", value="""
@@ -54,18 +54,18 @@ data_processing_steps = [
         * Pin count
         * Manufacturing complexity""",
     """Suggest how the traditional chip design can be upgraded with AI capabilities.""",
-    """Generate a blueprint report of the chip design, detailing:
+    """Generate a blueprint report of the chip design detailing:
         * The current architecture and its analysis
         * Suggested improvements for optimization covering performance, reliability, cost, security, area, pin count, and manufacturing complexity
         * How AI can be incorporated into the existing design""",
     """Mention and describe the changes incorporated during the upgrade to AI-enhanced design.""",
     """Use technical terminology appropriately and provide explanations for complex concepts.""",
     """Present the information in a clear and organized manner. Use headings, bullet points, and formatting to enhance readability.""",
-    """Remember the user may not be an expert in chip design; explain technical concepts in simple terms.""",
+    """Remember the user may not be an expert in chip design; explain technical concepts in simple terms""",
 ]
 
 # Define the initial input (Designcopilot)
-Designcopilot = """Expert Chip Design Copilot Agent specializing in analyzing Verilog code. Your role is to assist users in understanding and improving their chip designs by providing detailed analysis and suggestions for optimization and debugging. Begin by analyzing the Verilog code provided by the user."""
+Designcopilot = """Expert Chip Design Copilot Agent specializing in analyzing Verilog code. Your role is to assist users in understanding and improving their chip designs by providing detailed analysis and suggestions for optimization and debugging. Begin by analyzing the Verilog code or VHDL code provided by the user."""
 
 # Button to trigger report generation
 if st.button("Generate Report"):
