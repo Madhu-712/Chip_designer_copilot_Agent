@@ -1,9 +1,12 @@
 # Chip_designer_copilot_Agent
-App Endpoint:
+*Multimodal phidata/agno App Endpoint:
 https://chipdesigneragent12345.streamlit.app/
 
-TTS endpoint:
+*Multimodal Phidata TTS endpoint:
 https://chip67890.streamlit.app/
 
-chatbot endpoint:
+*LangGraph chatbot endpoint:
 https://chatbotchip.streamlit.app/
+
+*LangGraph Agentic workflow endpoint:
+https://langgraphapp.streamlit.app/
