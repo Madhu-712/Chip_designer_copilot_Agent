@@ -1,0 +1,14 @@
+#Here are some sample queries which can be asked to the 'Intelli Design Companion'
+
+How to guides ??
+
+High-level synthesis optimization
+Low-power chip design optimization 
+Performance optimization techniques
+Explain Architecture,Circuit and algorithm level optimization 
+Area optimization in VLSI
+Loop and cache optimization 
+Clock period minimization techniques 
+HLS resource binding ,allocation and scheduling 
+Explain boolean minimization and technology mapping  
+Explain ILP(Instruction level parallelism) and pipelining techniques  
