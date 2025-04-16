@@ -104,9 +104,13 @@ Open an [issue](https://github.com/Madhu-712/Chip_designer_copilot_Agent/issues)
 I have just developed an MVP so far but there is lot more enhancements which can be planned and implemented.
 
 * Comeup with a "Full stack AI driven EDA(Electronic Design Automation)suite of products" which can perform tedious task such as:
+
   1.Design space exploration
+
   2.Verification coverage and regression analytics 
-  3.Automaric test pattern generation
+
+  3.Automatic test pattern generation
+
   4.Analog Design Migration
 
 While this innovation product is freeing engineers to focus on chip quality and differentiation,the solution helps to optimize power,performance and area and also accelerate the design,implementation and verification of today's complex designs. Complementing the current AI driven data analytics that allows the insightful analysis of vast amount of data collected across design,verification, manufacturing,test and infield operations 
