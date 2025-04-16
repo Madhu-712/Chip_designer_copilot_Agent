@@ -110,6 +110,7 @@ I have just developed an MVP so far but there is lot more enhancements which can
   4.Analog Design Migration
 
 While this innovation is freeing engineers to focus on chip quality and differentiation,the solution helps to optimize power,performance and area and also accelerate the design,implementation and verification of today's complex designs. Complementing the current AI driven data analytics that allows the insightful analysis of vast amount of data collected across design,verification, manufacturing,test and infield operations. 
+
   
 
 
