@@ -12,6 +12,7 @@ This product "Intelli Design Companion " is truly a game changer and is going to
 ---
 
 ## 🌐 Live Demos
+Refer to Demo sample queries file to test the below apps.
 
 - **Agno Multimodal Copilot**: [chipdesigneragent12345.streamlit.app](https://chipdesigneragent12345.streamlit.app)
 - **Text-to-Speech (TTS)**: [chip67890.streamlit.app](https://chip67890.streamlit.app)
