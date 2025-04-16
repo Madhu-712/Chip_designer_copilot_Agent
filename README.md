@@ -1,7 +1,12 @@
 
-# Chip Designer Copilot Agent
+# Chip Designer Copilot Agent-"Intelli Design Companion",An innovative solution to Semiconductor Startups.
 
 🚀 A powerful AI Copilot for chip designers featuring different Agentic pattern multimodal reasoning (using Agno), multi-agent collaboration (using CrewAI), and advanced agentic workflows (using LangGraph). Designed for seamless integration into design tools, canvases, and workspaces.
+
+Regardless of the level of experiences,every designers can take there productivity up across every phase in the chip design cycle .It's like having an expert guide at your fingertips .
+
+This product "Intelli Design Companion " is truly a game changer and is going to bolster the productivity of Chip Design Startups.
+
 
 ---
 
@@ -34,7 +39,7 @@ This project demonstrates three major AI integration patterns:
 
 - **🔍 Multimodal Reasoning (Agno)**: Handle both text and visual inputs.
 - **🤖 Multi-Agent Systems (CrewAI)**: Specialized agents work collaboratively on chip design tasks.
-- **🧭 Agentic Workflows (LangGraph)**: Declarative graphs define task flows; includes a chatbot that can plug directly into any chip design UI/canvas.
+- **🧭 Agentic Workflows (LangGraph)**: Declarative graphs define task flows; includes a chatbot that can plug directly into any chip design workspaces UI/canvas.
 
 ---
 
@@ -93,9 +98,18 @@ PRs and issues are welcome! For large changes or integrations, please open a dis
 
 Open an [issue](https://github.com/Madhu-712/Chip_designer_copilot_Agent/issues) for questions or ideas, or reach out via GitHub discussions.
 
+## Future Works
 
+I have just developed an MVP so far but there is lot more enhancements which can be planned and implemented.
 
+* Comeup with a "Full stack AI driven EDA(Electronic Design Automation)suite of products" which can perform tedious task such as:
+  1.Design space exploration
+  2.Verification coverage and regression analytics 
+  3.Automaric test pattern generation
+  4.Analog Design Migration
 
+While freeing engineers to focus on chip quality and differentiation,the solution helps to optimize power,performance and area and also accelerate the design,implementation and verification of today's complex designs. Complementing the current AI driven data analytics that allows the insightful analysis of vast amount of data collected across design,verification, manufacturing,test and infield operations. 
+  
 
 
 
