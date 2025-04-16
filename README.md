@@ -111,6 +111,17 @@ I have just developed an MVP so far but there is lot more enhancements which can
 
 While this innovation product is freeing engineers to focus on chip quality and differentiation,the solution helps to optimize power,performance and area and also accelerate the design,implementation and verification of today's complex designs. Complementing the current AI driven data analytics that allows the insightful analysis of vast amount of data collected across design,verification, manufacturing,test and infield operations. 
 
+  ##References:
+
+Medium post:
+https://medium.com/@madhu.712/how-ai-agents-are-revolutionizing-hardware-design-submitted-for-agentx-llm-agents-mooc-61c384db480f
+
+Research references:
+
+*IEEE Xplore: Focus on journals like IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems (TCAD), IEEE Transactions on Very Large Scale Integration (VLSI) Systems, and conference proceedings like DAC, ICCAD, ISSCC.
+
+*ACM Digital Library: Look for publications in journals and conferences relevant to computer architecture and design automation.
+
   
 
 
