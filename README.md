@@ -1,6 +1,7 @@
 
-# Chip Designer Copilot Agent-
-"Intelli Design Companion", an innovative solution to semiconductor startups.
+# Chip Designer Copilot Agent
+#"Intelli Design Companion", 
+an innovative solution to semiconductor startups.
 
 🚀 A powerful AI Copilot for chip designers featuring different Agentic pattern multimodal reasoning (using Agno), multi-agent collaboration (using CrewAI), and advanced agentic workflows (using LangGraph). Designed for seamless integration into design tools, canvases, and workspaces.
 
@@ -18,6 +19,8 @@ Refer to Demo sample queries file to test the below apps.
 - **Text-to-Speech (TTS)**: [chip67890.streamlit.app](https://chip67890.streamlit.app)
 - **LangGraph Chatbot**: [chatbotchip.streamlit.app](https://chatbotchip.streamlit.app)
 - **LangGraph Agentic Workflow App**: [langgraphapp.streamlit.app](https://langgraphapp.streamlit.app)
+Firebase studio
+- https://9000-idx-studio-1745419732955.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev/
 
 ---
 
