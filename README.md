@@ -1,6 +1,6 @@
 
 # Chip Designer Copilot Agent
-#"Intelli Design Companion", 
+"Intelli Design Companion", 
 an innovative solution to semiconductor startups.
 
 🚀 A powerful AI Copilot for chip designers featuring different Agentic pattern multimodal reasoning (using Agno), multi-agent collaboration (using CrewAI), and advanced agentic workflows (using LangGraph). Designed for seamless integration into design tools, canvases, and workspaces.
