@@ -7,7 +7,7 @@ tavily-python
 gTTS
 
 
-
+pytesseract
 
 SpeechRecognition
 pydub
