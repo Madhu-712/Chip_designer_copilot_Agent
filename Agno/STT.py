@@ -1,9 +1,8 @@
 
 # Required installations:
-# pip install phidata google-generativeai tavily-python
 # pip install streamlit
-# pip install gTTS
 # pip install SpeechRecognition pyaudio
+# pip install phidata google-generativeai tavily-python
 
 import streamlit as st
 import os
@@ -13,8 +12,6 @@ from phi.agent import Agent
 from phi.model.google import Gemini
 from phi.tools.tavily import TavilyTools
 from tempfile import NamedTemporaryFile
-from gtts import gTTS
-import base64
 import speech_recognition as sr
 
 # Set environment variables for API keys
@@ -37,7 +34,6 @@ INSTRUCTIONS = """
    - Suggestions for optimization techniques.
    - Any potential areas for improvement in the design.
 3. Ensure the output is easy to understand for both technical and non-technical users.
-4. If the uploaded content is Verilog/VHDL code, explain its purpose and give recommendations for optimizing the code.
 """
 
 def resize_image_for_display(image_file):
@@ -74,7 +70,7 @@ def analyze_image(image_path):
             images=[image_path],
         )
         st.markdown(response.content)
-        return response.content  # Return the content for TTS
+        return response.content  # Return the analysis result
 
 def save_uploaded_file(uploaded_file):
     with NamedTemporaryFile(dir='.', suffix='.jpg', delete=False) as f:
@@ -101,38 +97,28 @@ def speech_to_text():
 def main():
     st.title("🤖🖥 Design Copilot Agent")
     
-    if 'selected_example' not in st.session_state:
-        st.session_state.selected_example = None
     if 'analyze_clicked' not in st.session_state:
         st.session_state.analyze_clicked = False
     
-    tab_examples, tab_upload, tab_camera, tab_speech = st.tabs([
-        "📚 Example Products", 
-        "📤 Upload Image", 
-        "📸 Take Photo",
-        "🎤 Speech Input"
+    tab_speech, tab_upload = st.tabs([
+        "🎤 Speech Input", 
+        "📤 Upload Image"
     ])
     
-    with tab_examples:
-        example_images = {
-            "Chip 1": "images/Chip 1.jpg",
-            "Chip 2": "images/Chip 2.jpg",
-            "Code 1": "images/Code 1.jpg",
-            "Code 2": "images/Code 2.jpg"
-        }
-        
-        cols = st.columns(4)
-        for idx, (name, path) in enumerate(example_images.items()):
-            with cols[idx]:
-                if st.button(name, use_container_width=True):
-                    st.session_state.selected_example = path
-                    st.session_state.analyze_clicked = False
-    
+    with tab_speech:
+        st.header("🎤 Speech Input for Analysis")
+        if st.button("Record Speech"):
+            user_query = speech_to_text()
+            if user_query:
+                st.write(f"Your query: {user_query}")
+                st.info("Use the 'Upload Image' tab to upload an image for analysis.")
+
     with tab_upload:
+        st.header("📤 Upload Image for Analysis")
         uploaded_file = st.file_uploader(
             "Upload product image", 
             type=["jpg", "jpeg", "png"],
-            help="Upload a clear image of IC chip or Verilog or VHDL code"
+            help="Upload a clear image of IC chip or Verilog/VHDL code"
         )
         if uploaded_file:
             resized_image = resize_image_for_display(uploaded_file)
@@ -143,37 +129,6 @@ def main():
                 os.unlink(temp_path)
                 if analysis_result:  # Check if there's text output
                     st.write(analysis_result)
-                
-    with tab_camera:
-        camera_photo = st.camera_input("Take a picture of the IC chip or Verilog or VHDL code")
-        if camera_photo:
-            resized_image = resize_image_for_display(camera_photo)
-            st.image(resized_image, caption="Captured Photo", use_column_width=False, width=MAX_IMAGE_WIDTH)
-            if st.button("🔍 Analyze Captured Photo", key="analyze_camera"):
-                temp_path = save_uploaded_file(camera_photo)
-                analysis_result = analyze_image(temp_path)  # Get the output of analysis
-                os.unlink(temp_path)
-                if analysis_result:  # Check if there's text output
-                    st.write(analysis_result)
-    
-    with tab_speech:
-        st.header("🎤 Speech Input for Analysis")
-        if st.button("Record Speech"):
-            user_query = speech_to_text()
-            if user_query:
-                st.write(f"Your query: {user_query}")
-
-    if st.session_state.selected_example:
-        st.divider()
-        st.subheader("Selected image")
-        resized_image = resize_image_for_display(st.session_state.selected_example)
-        st.image(resized_image, caption="Selected Example", use_column_width=False, width=MAX_IMAGE_WIDTH)
-        
-        if st.button("🔍 Analyze Example", key="analyze_example") and not st.session_state.analyze_clicked:
-            st.session_state.analyze_clicked = True
-            analysis_result = analyze_image(st.session_state.selected_example)
-            if analysis_result:  # Check if there's text output
-                st.write(analysis_result)
 
 if __name__ == "__main__":
     st.set_page_config(
