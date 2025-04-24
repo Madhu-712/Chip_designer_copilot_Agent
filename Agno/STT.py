@@ -1,3 +1,4 @@
+
 import streamlit as st
 import streamlit.components.v1 as components
 import os
@@ -80,24 +81,33 @@ def stt_button(text, key=None):
 
 def resize_image_for_display(image_file):
     """Resize image for display only, returns bytes"""
-    if isinstance(image_file, str):
-        img = Image.open(image_file)
-    else:
-        img = Image.open(image_file)
-    img.seek(0)
+    try:
+        if isinstance(image_file, str):
+            img = Image.open(image_file)
+        else:
+            img = Image.open(image_file)
+        img.seek(0)
 
-    aspect_ratio = img.height / img.width
-    new_height = int(MAX_IMAGE_WIDTH * aspect_ratio)
-    img = img.resize((MAX_IMAGE_WIDTH, new_height), Image.Resampling.LANCZOS)
+        aspect_ratio = img.height / img.width
+        new_height = int(MAX_IMAGE_WIDTH * aspect_ratio)
+        img = img.resize((MAX_IMAGE_WIDTH, new_height), Image.Resampling.LANCZOS)
 
-    buf = BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
+        buf = BytesIO()
+        img.save(buf, format="PNG")
+        return buf.getvalue()
+    except Exception as e:
+        st.error(f"Error processing image: {e}")
+        return None
+
 
 def save_uploaded_file(uploaded_file):
-    with NamedTemporaryFile(dir='.', suffix='.jpg', delete=False) as f:
-        f.write(uploaded_file.getbuffer())
-        return f.name
+    try:
+        with NamedTemporaryFile(dir='.', suffix='.jpg', delete=False) as f:
+            f.write(uploaded_file.getbuffer())
+            return f.name
+    except Exception as e:
+        st.error(f"Error saving uploaded file: {e}")
+        return None
 
 def text_to_speech(text):
     """Converts the given text to speech and returns a playable audio widget."""
@@ -164,21 +174,33 @@ def main():
             help="Upload a clear image of IC chip or verilog or VHDL code"
         )
         if uploaded_file:
-            resized_image = resize_image_for_display(uploaded_file)
-            st.image(resized_image, caption="Uploaded Image", use_container_width=False, width=MAX_IMAGE_WIDTH)
+            try:
+                resized_image = resize_image_for_display(uploaded_file)
+                if resized_image:
+                    st.image(resized_image, caption="Uploaded Image", use_container_width=False, width=MAX_IMAGE_WIDTH)
+            except Exception as e:
+                st.error(f"Error displaying uploaded image: {e}")
 
     with tab_camera:
         camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code")
         if camera_photo:
-            resized_image = resize_image_for_display(camera_photo)
-            st.image(resized_image, caption="Captured Photo", use_container_width=False, width=MAX_IMAGE_WIDTH)
+            try:
+                resized_image = resize_image_for_display(camera_photo)
+                if resized_image:
+                    st.image(resized_image, caption="Captured Photo", use_container_width=False, width=MAX_IMAGE_WIDTH)
+            except Exception as e:
+                st.error(f"Error displaying captured photo: {e}")
 
 
     if st.session_state.selected_example:
         st.divider()
         st.subheader("Selected image")
-        resized_image = resize_image_for_display(st.session_state.selected_example)
-        st.image(resized_image, caption="Selected Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
+        try:
+            resized_image = resize_image_for_display(st.session_state.selected_example)
+            if resized_image:
+                st.image(resized_image, caption="Selected Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
+        except Exception as e:
+            st.error(f"Error displaying selected example image: {e}")
 
 
 if __name__ == "__main__":
@@ -188,9 +210,3 @@ if __name__ == "__main__":
         initial_sidebar_state="collapsed"
     )
     main()
-
-
-
-
-
-
