@@ -1,73 +1,184 @@
 
+# Required installations:
+# pip install phidata google-generativeai tavily-python
+# pip install streamlit
+# pip install gTTS
+# pip install SpeechRecognition pyaudio
+
 import streamlit as st
-import speech_recognition as sr
-import pytesseract
+import os
 from PIL import Image
+from io import BytesIO
+from phi.agent import Agent
+from phi.model.google import Gemini
+from phi.tools.tavily import TavilyTools
+from tempfile import NamedTemporaryFile
+from gtts import gTTS
+import base64
+import speech_recognition as sr
+
+# Set environment variables for API keys
+os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
+os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
+
+# Constants
+MAX_IMAGE_WIDTH = 300
+
+# System Prompt and Instructions
+SYSTEM_PROMPT = """
+You are an expert chip design agent. Analyze the uploaded image, which may contain IC chip designs, Verilog/VHDL code, or circuit diagrams. Generate a detailed report on the chip's architecture, including optimization techniques and potential areas for improvement.
+"""
+
+INSTRUCTIONS = """
+1. Analyze the uploaded image or provided content to extract meaningful details about the chip design.
+2. Provide a comprehensive report covering:
+   - Architecture details of the chip.
+   - Identification of key modules or components.
+   - Suggestions for optimization techniques.
+   - Any potential areas for improvement in the design.
+3. Ensure the output is easy to understand for both technical and non-technical users.
+4. If the uploaded content is Verilog/VHDL code, explain its purpose and give recommendations for optimizing the code.
+"""
+
+def resize_image_for_display(image_file):
+    """Resize image for display only, returns bytes"""
+    if isinstance(image_file, str):
+        img = Image.open(image_file)
+    else:
+        img = Image.open(image_file)
+        image_file.seek(0)
+    
+    aspect_ratio = img.height / img.width
+    new_height = int(MAX_IMAGE_WIDTH * aspect_ratio)
+    img = img.resize((MAX_IMAGE_WIDTH, new_height), Image.Resampling.LANCZOS)
+    
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+@st.cache_resource
+def get_agent():
+    return Agent(
+        model=Gemini(id="gemini-2.0-flash-exp-image-generation"),
+        system_prompt=SYSTEM_PROMPT,
+        instructions=INSTRUCTIONS,
+        tools=[TavilyTools(api_key=os.getenv("TAVILY_API_KEY"))],
+        markdown=True,
+    )
+
+def analyze_image(image_path):
+    agent = get_agent()
+    with st.spinner('Analyzing image...'):
+        response = agent.run(
+            "Analyze the given image",
+            images=[image_path],
+        )
+        st.markdown(response.content)
+        return response.content  # Return the content for TTS
+
+def save_uploaded_file(uploaded_file):
+    with NamedTemporaryFile(dir='.', suffix='.jpg', delete=False) as f:
+        f.write(uploaded_file.getbuffer())
+        return f.name
 
 def speech_to_text():
-    """
-    Convert speech input to text using SpeechRecognition library.
-    """
+    """Converts speech input from microphone to text."""
     recognizer = sr.Recognizer()
-    microphone = sr.Microphone()
-
-    with microphone as source:
-        st.info("Listening... Please speak your query.")
+    with sr.Microphone() as source:
+        st.info("Listening... Please speak into the microphone.")
         recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
+        try:
+            audio = recognizer.listen(source)
+            text = recognizer.recognize_google(audio)
+            st.success(f"Recognized Speech: {text}")
+            return text
+        except sr.UnknownValueError:
+            st.error("Sorry, could not understand the audio.")
+        except sr.RequestError as e:
+            st.error(f"Could not request results; {e}")
+        return None
 
-    try:
-        # Recognize speech using Google Web Speech API
-        query = recognizer.recognize_google(audio)
-        st.success(f"Recognized Speech: {query}")
-        return query
-    except sr.UnknownValueError:
-        st.error("Sorry, could not understand the audio.")
-    except sr.RequestError as e:
-        st.error(f"Could not request results; {e}")
-    return None
-
-def process_image(image):
-    """
-    Process the uploaded image and extract text using OCR.
-    """
-    try:
-        text = pytesseract.image_to_string(image)
-        return text
-    except Exception as e:
-        return f"Error processing image: {str(e)}"
-
-# Streamlit Application
-st.title("Chip Design Architecture Analysis")
-st.write("""
-    This application allows you to:
-    1. Provide a speech prompt for analysis.
-    2. Upload an image containing Verilog/VHDL code or a circuit diagram.
-    3. Generate a report or answer based on the content.
-""")
-
-# Speech Input
-st.header("Step 1: Provide Speech Input")
-if st.button("Record Speech"):
-    user_query = speech_to_text()
-    if user_query:
-        st.write(f"Your query: {user_query}")
-
-# Image Upload
-st.header("Step 2: Upload Image")
-uploaded_image = st.file_uploader("Upload an image (Verilog/VHDL code or Circuit Diagram)", type=["png", "jpg", "jpeg"])
-
-# Analysis
-if uploaded_image:
-    st.header("Step 3: Analysis Report")
-    st.image(uploaded_image, caption="Uploaded Image", use_column_width=True)
-    st.write("Extracting text from the image...")
-    extracted_text = process_image(Image.open(uploaded_image))
+def main():
+    st.title("🤖🖥 Design Copilot Agent")
     
-    if extracted_text:
-        st.subheader("Extracted Text")
-        st.text(extracted_text)
-        st.subheader("Analysis and Recommendations")
-        st.write("Further analysis of the content will be implemented here.")
-    else:
-        st.error("No text found in the image or an error occurred.")
+    if 'selected_example' not in st.session_state:
+        st.session_state.selected_example = None
+    if 'analyze_clicked' not in st.session_state:
+        st.session_state.analyze_clicked = False
+    
+    tab_examples, tab_upload, tab_camera, tab_speech = st.tabs([
+        "📚 Example Products", 
+        "📤 Upload Image", 
+        "📸 Take Photo",
+        "🎤 Speech Input"
+    ])
+    
+    with tab_examples:
+        example_images = {
+            "Chip 1": "images/Chip 1.jpg",
+            "Chip 2": "images/Chip 2.jpg",
+            "Code 1": "images/Code 1.jpg",
+            "Code 2": "images/Code 2.jpg"
+        }
+        
+        cols = st.columns(4)
+        for idx, (name, path) in enumerate(example_images.items()):
+            with cols[idx]:
+                if st.button(name, use_container_width=True):
+                    st.session_state.selected_example = path
+                    st.session_state.analyze_clicked = False
+    
+    with tab_upload:
+        uploaded_file = st.file_uploader(
+            "Upload product image", 
+            type=["jpg", "jpeg", "png"],
+            help="Upload a clear image of IC chip or Verilog or VHDL code"
+        )
+        if uploaded_file:
+            resized_image = resize_image_for_display(uploaded_file)
+            st.image(resized_image, caption="Uploaded Image", use_column_width=False, width=MAX_IMAGE_WIDTH)
+            if st.button("🔍 Analyze Uploaded Image", key="analyze_upload"):
+                temp_path = save_uploaded_file(uploaded_file)
+                analysis_result = analyze_image(temp_path)  # Get the output of analysis
+                os.unlink(temp_path)
+                if analysis_result:  # Check if there's text output
+                    st.write(analysis_result)
+                
+    with tab_camera:
+        camera_photo = st.camera_input("Take a picture of the IC chip or Verilog or VHDL code")
+        if camera_photo:
+            resized_image = resize_image_for_display(camera_photo)
+            st.image(resized_image, caption="Captured Photo", use_column_width=False, width=MAX_IMAGE_WIDTH)
+            if st.button("🔍 Analyze Captured Photo", key="analyze_camera"):
+                temp_path = save_uploaded_file(camera_photo)
+                analysis_result = analyze_image(temp_path)  # Get the output of analysis
+                os.unlink(temp_path)
+                if analysis_result:  # Check if there's text output
+                    st.write(analysis_result)
+    
+    with tab_speech:
+        st.header("🎤 Speech Input for Analysis")
+        if st.button("Record Speech"):
+            user_query = speech_to_text()
+            if user_query:
+                st.write(f"Your query: {user_query}")
+
+    if st.session_state.selected_example:
+        st.divider()
+        st.subheader("Selected image")
+        resized_image = resize_image_for_display(st.session_state.selected_example)
+        st.image(resized_image, caption="Selected Example", use_column_width=False, width=MAX_IMAGE_WIDTH)
+        
+        if st.button("🔍 Analyze Example", key="analyze_example") and not st.session_state.analyze_clicked:
+            st.session_state.analyze_clicked = True
+            analysis_result = analyze_image(st.session_state.selected_example)
+            if analysis_result:  # Check if there's text output
+                st.write(analysis_result)
+
+if __name__ == "__main__":
+    st.set_page_config(
+        page_title="Design Copilot/Assistant Agent",
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
+    main()
