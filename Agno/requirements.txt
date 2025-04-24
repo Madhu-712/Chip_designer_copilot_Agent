@@ -1,4 +1,4 @@
-PyAudio
+#PyAudio
 streamlit
 Pillow
 phidata
@@ -11,7 +11,7 @@ pytesseract
 
 SpeechRecognition
 pydub
-#pyaudio
+pyaudio
 
 #streamlit==1.25.0
 
