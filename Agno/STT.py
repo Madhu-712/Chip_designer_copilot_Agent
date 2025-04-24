@@ -20,7 +20,6 @@ from pydub import AudioSegment
 from pydub.silence import split_on_silence
 import io  # Import io for BytesIO
 
-
 os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
 os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
 
@@ -43,11 +42,11 @@ def resize_image_for_display(image_file):
     return buf.getvalue()
 
 @st.cache_resource
-def get_agent():
+def get_agent(system_prompt=SYSTEM_PROMPT, instructions=INSTRUCTIONS):
     return Agent(
         model=Gemini(id="gemini-2.0-flash-exp-image-generation"),
-        system_prompt=SYSTEM_PROMPT,
-        instructions=INSTRUCTIONS,
+        system_prompt=system_prompt,
+        instructions=instructions,
         tools=[TavilyTools(api_key=os.getenv("TAVILY_API_KEY"))],
         markdown=True,
     )
@@ -137,11 +136,30 @@ def text_to_speech(text):
 
 def main():
     st.title("🤖🖥 Design Copilot Agent")
-    
+
     if 'selected_example' not in st.session_state:
         st.session_state.selected_example = None
     if 'analyze_clicked' not in st.session_state:
         st.session_state.analyze_clicked = False
+    if 'custom_system_prompt' not in st.session_state:
+        st.session_state.custom_system_prompt = SYSTEM_PROMPT
+    if 'custom_instructions' not in st.session_state:
+        st.session_state.custom_instructions = INSTRUCTIONS
+
+
+    # Record initial instructions from user
+    st.subheader("Record Initial Instructions")
+    initial_audio_bytes = record_audio()
+
+    if initial_audio_bytes:
+        with st.spinner("Transcribing initial instructions..."):
+            initial_instructions = speech_to_text(initial_audio_bytes)
+            if initial_instructions:
+                st.write("Transcribed Instructions:")
+                st.write(initial_instructions)
+                st.session_state.custom_system_prompt = "You are an AI Agent assistant"  #Override to make a good prompt
+                st.session_state.custom_instructions = initial_instructions  #Setting instructions for session
+
 
     tab_examples, tab_upload, tab_camera = st.tabs([
         "📚 Example Products", 
@@ -242,14 +260,26 @@ def main():
                     st.write(speech_text) # Print audio transcribed text
 
         if st.button("🔍 Analyze Example with Audio", key="analyze_example_audio") and not st.session_state.analyze_clicked: #Modified Button and ensure that click will not trigger again
-
             st.session_state.analyze_clicked = True #Ensure button can't trigger again
-            analysis_result = analyze_image(st.session_state.selected_example, speech_text) #Pass speech text to analysis
+            
+            #Get Agent with custom system prompt and instructions
+            agent = get_agent(system_prompt = st.session_state.custom_system_prompt, instructions = st.session_state.custom_instructions)
+            temp_path = st.session_state.selected_example
+            prompt = "Analyze the given image"
+            if speech_text:
+                prompt += f" considering the following spoken notes: {speech_text}" #Append speech text as prompt
+            with st.spinner('Analyzing image...'):
+                response = agent.run(
+                    prompt,
+                    images=[temp_path],
+                )
+                analysis_result = response.content
+                st.markdown(analysis_result)
+            
             if analysis_result:  # Check if there's text output
                 audio_html = text_to_speech(analysis_result)
                 if audio_html:
                     st.markdown(audio_html, unsafe_allow_html=True)
-
 
 if __name__ == "__main__":
     st.set_page_config(
