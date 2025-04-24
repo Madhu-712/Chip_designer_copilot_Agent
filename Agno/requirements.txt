@@ -5,11 +5,9 @@ phidata
 google-generativeai
 tavily-python
 gTTS
-#streamlit==1.25.0
-#speechrecognition==3.8.1
-#pyverilog==1.3.0
 
-#streamlit-components
+
+
 
 SpeechRecognition
 pydub
