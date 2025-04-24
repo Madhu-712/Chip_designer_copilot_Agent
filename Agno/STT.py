@@ -1,9 +1,4 @@
 
-# pip install phidata google-generativeai tavily-python
-# pip install streamlit
-# pip install gTTS
-# pip install SpeechRecognition pydub
-
 import streamlit as st
 import os
 from PIL import Image
@@ -24,13 +19,6 @@ os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
 os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
 
 MAX_IMAGE_WIDTH = 300
-
-# Example Images Directory (adjust if needed)
-EXAMPLE_IMAGE_DIR = "examples"  # Create a folder named 'examples' in the same directory as the script
-
-# Ensure Example Directory Exists
-if not os.path.exists(EXAMPLE_IMAGE_DIR):
-    os.makedirs(EXAMPLE_IMAGE_DIR)
 
 def resize_image_for_display(image_file):
     """Resize image for display only, returns bytes"""
@@ -172,36 +160,6 @@ def main():
                 st.session_state.custom_system_prompt = "You are an AI Agent assistant"  #Override to make a good prompt
                 st.session_state.custom_instructions = initial_instructions  #Setting instructions for session
 
-    # Example Images
-    example_images = {
-        "Example Chip": os.path.join(EXAMPLE_IMAGE_DIR, "chip.jpg"),
-        "Example Code": os.path.join(EXAMPLE_IMAGE_DIR, "code.jpg"),
-    }
-
-    # Load example images to the example folder if they don't exist
-    for label, path in example_images.items():
-        if not os.path.exists(path):
-            if label == "Example Chip":
-                # Use the Chip 1 as example, you can use other examples as well.
-                example_filepath = "images/Chip 1.jpg"
-            elif label == "Example Code":
-                 # Use the Code 1 as example, you can use other examples as well.
-                example_filepath = "images/Code 1.jpg"
-            try:
-                # Copy the files into the example path
-                if not os.path.exists(os.path.dirname(path)):
-                     os.makedirs(os.path.dirname(path))
-
-                # Check if the source file exists
-                if os.path.exists(example_filepath):
-                     # Copy the source files into the right location.
-                     with open(example_filepath, 'rb') as f_in, open(path, 'wb') as f_out:
-                        f_out.write(f_in.read())
-                else:
-                     st.error("Example image source doesn't exit. Check your image source and replace them.")
-            except Exception as e:
-                 st.error(f"An error occurred while copying example files: {e}")
-                 example_images[label] = None  # Handle the case where example loading fails
 
     tab_examples, tab_upload, tab_camera, tab_speech = st.tabs([ #Fixed: Added tab_speech in assignment
         "📚 Example Products", 
@@ -211,14 +169,19 @@ def main():
     ])
 
     with tab_examples:
-         example_select = st.selectbox("Choose an example", options = list(example_images.keys()))
-         if example_select:
-              example_path = example_images[example_select]
-              st.session_state.image_path = example_path
-              resized_image = resize_image_for_display(example_path)
-              st.image(resized_image, caption="Uploaded Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
-         else:
-              st.warning("No example")
+        example_images = {
+            "Chip 1": "images/Chip 1.jpg",
+            "Chip 2": "images/Chip 2.jpg",
+            "Code 1": "images/Code 1.jpg",
+            "Code 2": "images/Code 2.jpg"
+        }
+        
+        cols = st.columns(4)
+        for idx, (name, path) in enumerate(example_images.items()):
+            with cols[idx]:
+                if st.button(name, use_container_width=True):
+                    st.session_state.selected_example = path
+                    st.session_state.analyze_clicked = False #Reset click
 
 
     with tab_upload:
@@ -292,3 +255,11 @@ if __name__ == "__main__":
         initial_sidebar_state="collapsed"
     )
     main()
+
+
+
+
+
+
+ 
+
