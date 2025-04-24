@@ -11,9 +11,10 @@ pytesseract
 
 SpeechRecognition
 pydub
+pyaudio
 
 #streamlit==1.25.0
 
 pytesseract==0.3.10
 #Pillow==9.5.0
-pyaudio==0.2.13
+#pyaudio==0.2.13
