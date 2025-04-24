@@ -1,107 +1,84 @@
 
 import streamlit as st
-import streamlit.components.v1 as components
+import google.generativeai as genai
 from PIL import Image
 import io
-# For image analysis (replace with your chosen library and model)
-# Example:  from transformers import pipeline  (You'll need to install transformers)
-# For text summarization (replace with your chosen library and model)
-# Example: from transformers import pipeline (You'll need to install transformers)
+import os
 
+# Configure the Gemini API Key
+GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY") # Replace with your actual API key or store in Streamlit secrets
+genai.configure(api_key=GOOGLE_API_KEY)
 
-def stt_button(text, key=None):
-    """A simple speech-to-text button."""
-    speech_script = f"""
-        <script>
-        let recognition;
-        let buttonKey = '{key}';
+# Function to perform Gemini Multimodal analysis
+def generate_gemini_report(image_bytes, stt_text):
+    """Generates a report for chip design analysis using Gemini's multimodal capabilities,
+    handling images of chip designs or Verilog/VHDL code.
+    """
 
-        function startSpeechRecognition(buttonKey) {{
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {{
-                recognition = new (webkitSpeechRecognition || SpeechRecognition)();
-                recognition.continuous = false;
-                recognition.interimResults = false;
-                recognition.lang = 'en-US';
+    model = genai.GenerativeModel('gemini-1.5-flash') # or gemini-1.5-pro if you have access
 
-                recognition.onresult = function(event) {{
-                    const transcript = event.results[0][0].transcript;
-                    Streamlit.setComponentValue(transcript);
-                }}
+    # Prepare the prompt
+    prompt_parts = [
+        "You are an AI Chip Design Copilot. Analyze the following information to assist in chip design tasks. The image could be a chip design diagram/schematic/layout OR Verilog/VHDL code. The accompanying speech-to-text (STT) transcription likely contains design notes, requirements, or explanations.  Generate a concise summary report focused on chip design aspects, considering the image type.",
+        "If the image is code, focus on identifying potential errors, stylistic issues, areas for optimization, and understanding the code's functionality within a chip design context. If the image is a design diagram, focus on key elements, potential issues, and areas for improvement based on both the visual and textual information.",
+        "The report should be technically informative, aimed at assisting chip designers, and provide a clear overview of the design aspects. Consider the STT transcription as context for the image, regardless of the image type.",
+        "Image:",
+        genai.Part.from_data(image_bytes, mime_type="image/png"),  # Or image/jpeg if applicable
+        "Speech-to-text Transcription:",
+        stt_text
+    ]
 
-                recognition.onerror = function(event) {{
-                    console.error('Speech recognition error:', event.error);
-                }}
+    try:
+        response = model.generate_content(prompt_parts)
+        return response.text  # Extract the generated text
+    except Exception as e:
+        return f"Error generating report: {e}"
 
-                recognition.onend = function() {{
-                    console.log('Speech recognition ended.');
-                }}
-
-                recognition.start();
-            }} else {{
-                alert('Speech recognition not supported.');
-            }}
-        }}
-
-        document.getElementById('stt_button_' + buttonKey).addEventListener('click', function() {{
-            startSpeechRecognition(buttonKey);
-        }});
-        </script>
-        """
-
-    return components.html(
-        f"""
-        <button id="stt_button_{key}" style="width: 100%; padding: 10px;">{text}</button>
-        {speech_script}
-        """,
-        height=50,
-    )
-
-
-# Placeholder functions for image and text analysis (replace with your code)
-def analyze_image(image, transcript):
-    """Analyzes the image based on the provided transcript and returns a description."""
-    # Replace this with your image analysis logic using a library like OpenCV, etc.
-    # This is just a placeholder:
-    return f"Image analysis: The image appears to be related to {transcript} (This is a placeholder)."
-
-
-def generate_report(image_analysis, transcript):
-    """Generates a report combining image analysis and the transcript."""
-    # Replace this with your report generation logic.  You might use a
-    # text summarization model from Hugging Face Transformers, for example.
-    # This is a placeholder:
-    return f"Report:\n\nSpeech: {transcript}\n\nImage Analysis: {image_analysis}\n\nSummary: This report combines the spoken input with an analysis of the provided image (This is a placeholder)."
-
-
+# Main Streamlit app
 def main():
-    st.title("Image Analysis Agent")
+    st.title("AI Chip Design Copilot Agent")
 
-    # 1. Speech-to-Text
-    speech_result = stt_button("Speak", key="stt_1")
-    transcript = ""
-    if speech_result:
-        transcript = speech_result
-        st.write(f"You said: {transcript}")
+    # Sidebar for Uploading Image
+    st.sidebar.header("Chip Design Image/Code Upload")
+    uploaded_file = st.sidebar.file_uploader("Choose a chip design image (schematic, layout) OR Verilog/VHDL code...", type=["jpg", "jpeg", "png"])
 
-    # 2. Image Upload
-    uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+    # Sidebar for Speech-to-Text (STT)
+    st.sidebar.header("Speech-to-Text Design Notes")
+    stt_input = st.sidebar.text_area("Enter your design notes, requirements, or explanations (Speech-to-Text transcription):")
 
-    if uploaded_file:
+    # Processing when an image is uploaded
+    if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_column_width=True)
+        st.image(image, caption="Uploaded Chip Design Image/Code", use_column_width=True)
 
-        # 3. Analysis and Report Generation (ONLY if we have both image and transcript)
-        if transcript:
-            image_analysis = analyze_image(image, transcript)  # Replace with your actual analysis
-            report = generate_report(image_analysis, transcript)  # Replace with your report generation
-            st.subheader("Report:")
-            st.write(report)
-        else:
-            st.warning("Please provide speech input (click 'Speak').")
+        # Convert PIL Image to bytes
+        img_bytes = io.BytesIO()
+        image.save(img_bytes, format='PNG') # Or JPEG
+        image_bytes = img_bytes.getvalue()
+
 
     else:
-        st.info("Please upload an image.")
+        image_bytes = None
 
+    # Report Generation
+    if uploaded_file is not None or stt_input:
+        st.header("Generated Chip Design Analysis Report")
+
+        if uploaded_file is None:
+            st.warning("No image uploaded. The report will be based solely on the design notes (Speech-to-Text input).")
+            image_bytes = None  # Ensure it's None for text-only analysis
+
+        if uploaded_file is not None and not stt_input:
+            st.warning("No design notes provided. The report will be based solely on the uploaded chip design image/code.")
+
+        try:
+            report = generate_gemini_report(image_bytes, stt_input)
+            st.write(report)
+        except Exception as e:
+            st.error(f"Error generating report: {e}")
+
+    else:
+        st.info("Please upload a chip design image/code or enter design notes to generate a report.")
 
 if __name__ == "__main__":
     main()
