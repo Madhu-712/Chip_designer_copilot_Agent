@@ -160,12 +160,14 @@ def main():
         uploaded_file = st.file_uploader(
             "Upload product image", 
             type=["jpg", "jpeg", "png"],
-            help="Upload a clear image of IC chip or verilog or VHDL code"
+            help="Upload a clear image of IC chip or verilog or VHDL code",
+            key="upload_image" # Unique key for image uploader
         )
         audio_file = st.file_uploader(
             "Upload audio notes",
             type=["wav", "mp3", "m4a"],
-            help="Upload design instructions, requirements, or explanations"
+            help="Upload design instructions, requirements, or explanations",
+            key="upload_audio" # Unique key for audio uploader
         )
         
         speech_text = ""  # Initialize an empty variable for speech_text.
@@ -192,11 +194,12 @@ def main():
                     st.markdown(audio_html, unsafe_allow_html=True)
   
     with tab_camera:
-        camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code")
+        camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code", key="camera_input")  #Unique key
         audio_file = st.file_uploader(
         "Upload audio notes",
         type=["wav", "mp3", "m4a"],
-        help="Upload design instructions, requirements, or explanations"
+        help="Upload design instructions, requirements, or explanations",
+        key="camera_audio"  #Unique key
         )
 
         speech_text = ""  # Initialize an empty variable for speech_text.
@@ -230,7 +233,7 @@ def main():
         audio_file = st.file_uploader(
         "Upload audio notes",
         type=["wav", "mp3", "m4a"],
-        help="Upload design instructions, requirements, or explanations", key ="example_audio"
+        help="Upload design instructions, requirements, or explanations", key ="example_audio"  #Unique key
         )
         speech_text = "" # Initiliaze Text
 
