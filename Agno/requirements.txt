@@ -1,4 +1,4 @@
-pyaudio
+PyAudio
 streamlit
 Pillow
 phidata
