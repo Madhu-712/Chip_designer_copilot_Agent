@@ -191,7 +191,11 @@ def main():
             type=["jpg", "jpeg", "png"],
             help="Upload a clear image of IC chip or verilog or VHDL code",
             key="upload_image" # Unique key for image uploader
-        )
+        
+         #Display speech to text
+        if 'speech_tab_text' in st.session_state:
+            st.write("From Speech to Text Tab:")
+            st.write(st.session_state.speech_tab_text)
         
         speech_text = ""  # Initialize an empty variable for speech_text.
         audio_bytes = record_audio()  #Record audio with streamlit 
@@ -204,7 +208,7 @@ def main():
             with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
                 speech_text = speech_to_text(audio_bytes)
                 if speech_text:
-                    st.write("Transcription:")
+                    st.write("Transcription From Current Record:")
                     st.write(speech_text) # Print audio transcribed text
 
         #Use transcription stored from speech tab
@@ -222,6 +226,12 @@ def main():
   
     with tab_camera:
         camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code", key="camera_input")  #Unique key
+        
+        #Display speech to text
+        if 'speech_tab_text' in st.session_state:
+            st.write("From Speech to Text Tab:")
+            st.write(st.session_state.speech_tab_text)
+            
         audio_bytes = record_audio()  #Record audio with streamlit 
 
         speech_text = ""  # Initialize an empty variable for speech_text.
@@ -235,7 +245,7 @@ def main():
             with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
                 speech_text = speech_to_text(audio_bytes)
                 if speech_text:
-                    st.write("Transcription:")
+                    st.write("Transcription From Current Record:")
                     st.write(speech_text) # Print audio transcribed text
         
         #Use transcription stored from speech tab
@@ -274,6 +284,11 @@ def main():
         resized_image = resize_image_for_display(st.session_state.selected_example)
         st.image(resized_image, caption="Selected Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
         
+         #Display speech to text
+        if 'speech_tab_text' in st.session_state:
+            st.write("From Speech to Text Tab:")
+            st.write(st.session_state.speech_tab_text)
+            
         audio_bytes = record_audio()
         speech_text = "" # Initiliaze Text
 
@@ -281,7 +296,7 @@ def main():
             with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
                 speech_text = speech_to_text(audio_bytes)
                 if speech_text:
-                    st.write("Transcription:")
+                    st.write("Transcription From Current Record:")
                     st.write(speech_text) # Print audio transcribed text
         
         #Use transcription stored from speech tab
