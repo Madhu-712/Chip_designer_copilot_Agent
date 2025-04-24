@@ -51,7 +51,7 @@ def stt_button(text, key=None):
 
                 // Update the button text with the interim result
                 document.getElementById('stt_button_' + buttonKey).innerHTML = 'Recording... ' + interimTranscript + finalTranscript;
-            };
+            }};
 
             recognition.onerror = (event) => {{
                 console.error('Speech recognition error:', event.error);
@@ -271,3 +271,13 @@ if __name__ == "__main__":
         initial_sidebar_state="collapsed"
     )
     main()
+
+
+
+
+
+
+
+
+
+
