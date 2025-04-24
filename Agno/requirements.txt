@@ -5,7 +5,7 @@ phidata
 google-generativeai
 tavily-python
 gTTS
-speech_recognition
+
 #streamlit-components
 
 SpeechRecognition
