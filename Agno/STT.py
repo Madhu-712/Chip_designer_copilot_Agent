@@ -1,8 +1,8 @@
 
 import streamlit as st
 import speech_recognition as sr
-from PIL import Image
 import pytesseract
+from PIL import Image
 
 def speech_to_text():
     """
@@ -10,14 +10,14 @@ def speech_to_text():
     """
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
-    
+
     with microphone as source:
         st.info("Listening... Please speak your query.")
         recognizer.adjust_for_ambient_noise(source)
         audio = recognizer.listen(source)
-        
+
     try:
-        # Speech recognition
+        # Recognize speech using Google Web Speech API
         query = recognizer.recognize_google(audio)
         st.success(f"Recognized Speech: {query}")
         return query
@@ -38,7 +38,7 @@ def process_image(image):
         return f"Error processing image: {str(e)}"
 
 # Streamlit Application
-st.title("Chip Design Analysis (Image-Based)")
+st.title("Chip Design Architecture Analysis")
 st.write("""
     This application allows you to:
     1. Provide a speech prompt for analysis.
