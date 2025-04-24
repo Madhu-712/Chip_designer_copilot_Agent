@@ -5,3 +5,5 @@ phidata
 google-generativeai
 tavily-python
 gTTS
+
+streamlit-components
