@@ -1,21 +1,88 @@
 
-# pip install streamlit speech_recognition pydub gTTS
+# pip install phidata google-generativeai tavily-python
+# pip install streamlit
+# pip install gTTS
+# pip install SpeechRecognition pydub
 
 import streamlit as st
+import os
+from PIL import Image
+from io import BytesIO
+from phi.agent import Agent
+from phi.model.google import Gemini
+from phi.tools.tavily import TavilyTools
+from tempfile import NamedTemporaryFile
+from prompts import SYSTEM_PROMPT, INSTRUCTIONS
+from gtts import gTTS
+import base64
 import speech_recognition as sr
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
-import io
-from gtts import gTTS
-import base64
+import io  # Import io for BytesIO
 
-def record_audio():
+os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
+os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
+
+MAX_IMAGE_WIDTH = 300
+
+# Example Images Directory (adjust if needed)
+EXAMPLE_IMAGE_DIR = "examples"  # Create a folder named 'examples' in the same directory as the script
+
+# Ensure Example Directory Exists
+if not os.path.exists(EXAMPLE_IMAGE_DIR):
+    os.makedirs(EXAMPLE_IMAGE_DIR)
+
+def resize_image_for_display(image_file):
+    """Resize image for display only, returns bytes"""
+    if isinstance(image_file, str):
+        img = Image.open(image_file)
+    else:
+        img = Image.open(image_file)
+        image_file.seek(0)
+    
+    aspect_ratio = img.height / img.width
+    new_height = int(MAX_IMAGE_WIDTH * aspect_ratio)
+    img = img.resize((MAX_IMAGE_WIDTH, new_height), Image.Resampling.LANCZOS)
+    
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+@st.cache_resource
+def get_agent(system_prompt=SYSTEM_PROMPT, instructions=INSTRUCTIONS):
+    return Agent(
+        model=Gemini(id="gemini-2.0-flash-exp-image-generation"),
+        system_prompt=system_prompt,
+        instructions=instructions,
+        tools=[TavilyTools(api_key=os.getenv("TAVILY_API_KEY"))],
+        markdown=True,
+    )
+
+def analyze_image(image_path, speech_text=""):  # Modified to accept speech_text
+    agent = get_agent()
+    prompt = "Analyze the given image"
+    if speech_text:
+        prompt += f" considering the following spoken notes: {speech_text}" #Append speech text as prompt
+    with st.spinner('Analyzing image...'):
+        response = agent.run(
+            prompt,
+            images=[image_path],
+        )
+        st.markdown(response.content)
+        return response.content  # Return the content for TTS
+
+def save_uploaded_file(uploaded_file):
+    with NamedTemporaryFile(dir='.', suffix='.jpg', delete=False) as f:
+        f.write(uploaded_file.getbuffer())
+        return f.name
+
+def record_audio(key):
     """Records audio using Streamlit's `st.audio` and returns the audio data."""
-    audio_bytes = st.audio(None, format="audio/wav")  # Use streamlit audio recorder
+    audio_bytes = st.audio(None, format="audio/wav", key = key) #Use streamlit audio recorder
 
     if audio_bytes:
-        return audio_bytes
-    else:
+         return audio_bytes
+    else :
         return None
 
 def speech_to_text(audio_bytes):
@@ -23,23 +90,22 @@ def speech_to_text(audio_bytes):
     r = sr.Recognizer()
     try:
         # Use BytesIO to work with audio_bytes directly
-        audio_segment = AudioSegment.from_file(io.BytesIO(audio_bytes))  # Use BytesIO to read
-        # Split audio where silence is 700ms or greater and adjust other parameters as needed
+        audio_segment = AudioSegment.from_file(io.BytesIO(audio_bytes)) # Use BytesIO to read
+         # Split audio where silence is 700ms or greater and adjust other parameters as needed
         chunks = split_on_silence(
             audio_segment,
             min_silence_len=500,  # Reduce the minimum silence length (milliseconds)
-            silence_thresh=-40,  # Adjust the silence threshold (dBFS)
-            keep_silence=250,  # Keep some silence after each chunk (milliseconds)
+            silence_thresh=-40,   # Adjust the silence threshold (dBFS)
+            keep_silence=250       # Keep some silence after each chunk (milliseconds)
         )
         whole_text = ""
         for i, audio_chunk in enumerate(chunks, start=1):
             # Export audio chunk and save it in a temporary file
-            with io.BytesIO() as temp_wav:  # Use BytesIO directly
-                audio_chunk.export(temp_wav, format="wav")  # Export to BytesIO
-                temp_wav.seek(0)  # Reset the buffer position
-
+            with NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
+                audio_chunk.export(temp_wav.name, format="wav")
+                
                 # Recognize the chunk
-                with sr.AudioFile(temp_wav) as source:
+                with sr.AudioFile(temp_wav.name) as source:
                     audio = r.record(source)
                 try:
                     text = r.recognize_google(audio)
@@ -48,11 +114,14 @@ def speech_to_text(audio_bytes):
                 except sr.RequestError as e:
                     text = f"Could not request results from Google Speech Recognition service; {e}"
 
-                whole_text += text + " "  # append text
+                whole_text += text + " " # append text
+                os.unlink(temp_wav.name) #Remove temp file
         return whole_text
     except Exception as e:
         st.error(f"Error transcribing audio: {e}")
         return None
+
+
 
 def text_to_speech(text):
     """Converts the given text to speech and returns a playable audio widget."""
@@ -71,35 +140,155 @@ def text_to_speech(text):
         st.error(f"Error generating TTS: {e}")
         return None
 
+
 def main():
-    st.title("Speech-to-Text Application")
+    st.title("🤖🖥 Design Copilot Agent")
 
-    # Instructions for the user
-    st.write("Click the 'Record' button below to start recording audio.")
-    st.write("After recording, the transcribed text will be displayed, along with an option to play the text as speech.")
+    if 'selected_example' not in st.session_state:
+        st.session_state.selected_example = None
+    if 'analyze_clicked' not in st.session_state:
+        st.session_state.analyze_clicked = False
+    if 'custom_system_prompt' not in st.session_state:
+        st.session_state.custom_system_prompt = SYSTEM_PROMPT
+    if 'custom_instructions' not in st.session_state:
+        st.session_state.custom_instructions = INSTRUCTIONS
+    if 'speech_tab_text' not in st.session_state:
+        st.session_state.speech_tab_text = "" #Initialize in session state
+    if 'image_path' not in st.session_state:
+        st.session_state.image_path = None
+    if 'transcribed_audio' not in st.session_state:
+        st.session_state.transcribed_audio = None
 
-    # Record audio
-    audio_bytes = record_audio()
+    # Record initial instructions from user
+    st.subheader("Record Initial Instructions")
+    initial_audio_bytes = record_audio('initial_instructions')
 
-    if audio_bytes:
-        with st.spinner("Transcribing audio..."):
-            # Transcribe audio to text
-            transcribed_text = speech_to_text(audio_bytes)
+    if initial_audio_bytes:
+        with st.spinner("Transcribing initial instructions..."):
+            initial_instructions = speech_to_text(initial_audio_bytes)
+            if initial_instructions:
+                st.write("Transcribed Instructions:")
+                st.write(initial_instructions)
+                st.session_state.custom_system_prompt = "You are an AI Agent assistant"  #Override to make a good prompt
+                st.session_state.custom_instructions = initial_instructions  #Setting instructions for session
 
-            if transcribed_text:
-                st.subheader("Transcribed Text:")
-                st.write(transcribed_text)
+    # Example Images
+    example_images = {
+        "Example Chip": os.path.join(EXAMPLE_IMAGE_DIR, "chip.jpg"),
+        "Example Code": os.path.join(EXAMPLE_IMAGE_DIR, "code.jpg"),
+    }
 
-                # Text-to-speech option
-                st.subheader("Text-to-Speech:")
-                if st.button("Play as Speech"):
-                    audio_html = text_to_speech(transcribed_text)
-                    if audio_html:
-                        st.markdown(audio_html, unsafe_allow_html=True)
-            else:
-                st.warning("Could not transcribe the audio. Please try again.")
-    else:
-        st.info("Click the audio recorder to start recording your speech.")
+    # Load example images to the example folder if they don't exist
+    for label, path in example_images.items():
+        if not os.path.exists(path):
+            if label == "Example Chip":
+                # Use the Chip 1 as example, you can use other examples as well.
+                example_filepath = "images/Chip 1.jpg"
+            elif label == "Example Code":
+                 # Use the Code 1 as example, you can use other examples as well.
+                example_filepath = "images/Code 1.jpg"
+            try:
+                # Copy the files into the example path
+                if not os.path.exists(os.path.dirname(path)):
+                     os.makedirs(os.path.dirname(path))
+
+                # Check if the source file exists
+                if os.path.exists(example_filepath):
+                     # Copy the source files into the right location.
+                     with open(example_filepath, 'rb') as f_in, open(path, 'wb') as f_out:
+                        f_out.write(f_in.read())
+                else:
+                     st.error("Example image source doesn't exit. Check your image source and replace them.")
+            except Exception as e:
+                 st.error(f"An error occurred while copying example files: {e}")
+                 example_images[label] = None  # Handle the case where example loading fails
+
+    tab_examples, tab_upload, tab_camera, tab_speech = st.tabs([ #Fixed: Added tab_speech in assignment
+        "📚 Example Products", 
+        "📤 Upload Image", 
+        "📸 Take Photo",
+        "🎤 Speech-to-Text" # New Tab
+    ])
+
+    with tab_examples:
+         example_select = st.selectbox("Choose an example", options = list(example_images.keys()))
+         if example_select:
+              example_path = example_images[example_select]
+              st.session_state.image_path = example_path
+              resized_image = resize_image_for_display(example_path)
+              st.image(resized_image, caption="Uploaded Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
+         else:
+              st.warning("No example")
+
+
+    with tab_upload:
+        uploaded_file = st.file_uploader(
+            "Upload product image", 
+            type=["jpg", "jpeg", "png"],
+            help="Upload a clear image of IC chip or verilog or VHDL code",
+            key="upload_image" # Unique key for image uploader
+        )
+
+        if uploaded_file:
+                st.session_state.image_path = save_uploaded_file(uploaded_file)
+                resized_image = resize_image_for_display(uploaded_file)
+                st.image(resized_image, caption="Uploaded Image", use_container_width=False, width=MAX_IMAGE_WIDTH)
+
+
+    with tab_camera:
+        camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code", key="camera_input")  #Unique key
+        
+        if camera_photo:
+            st.session_state.image_path = save_uploaded_file(camera_photo)
+            resized_image = resize_image_for_display(camera_photo)
+            st.image(resized_image, caption="Captured Photo", use_container_width=False, width=MAX_IMAGE_WIDTH)
+
+
+    with tab_speech:
+        st.subheader("Speech-to-Text Interface")
+        speech_audio_bytes = record_audio("speech_tab") #Give unique key
+    
+        if speech_audio_bytes:
+            with st.spinner("Transcribing Audio..."):
+                speech_tab_text = speech_to_text(speech_audio_bytes)
+                if speech_tab_text:
+                    st.write("Transcribed Text:")
+                    st.write(speech_tab_text)
+                    st.session_state.transcribed_audio = speech_tab_text
+                else:
+                    st.session_state.transcribed_audio = None #Reset
+
+
+    if st.button("🔍 Analyze Image with Audio and Generate Report", key="analyze_all"):
+
+        if st.session_state.image_path:
+            #Get Agent with custom system prompt and instructions
+            agent = get_agent(system_prompt = st.session_state.custom_system_prompt, instructions = st.session_state.custom_instructions)
+
+            prompt = "Analyze the given image"
+            if st.session_state.transcribed_audio:
+                prompt += f" considering the following spoken notes: {st.session_state.transcribed_audio}" 
+
+            with st.spinner('Analyzing image and generating report...'):
+                response = agent.run(
+                    prompt,
+                    images=[st.session_state.image_path],
+                )
+                analysis_result = response.content
+                st.markdown(analysis_result)
+
+            if analysis_result:  # Check if there's text output
+                audio_html = text_to_speech(analysis_result)
+                if audio_html:
+                    st.markdown(audio_html, unsafe_allow_html=True) #TTS
+        else:
+            st.warning("Please upload an image or capture a photo first.")
+
 
 if __name__ == "__main__":
+    st.set_page_config(
+        page_title="Design copilot/assistant Agent",
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
     main()
