@@ -18,6 +18,8 @@ import base64
 import speech_recognition as sr
 from pydub import AudioSegment
 from pydub.silence import split_on_silence
+import io  # Import io for BytesIO
+
 
 os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
 os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
@@ -68,17 +70,24 @@ def save_uploaded_file(uploaded_file):
         f.write(uploaded_file.getbuffer())
         return f.name
 
+def record_audio():
+    """Records audio using Streamlit's `st.audio` and returns the audio data."""
+    audio_bytes = st.audio(None, format="audio/wav") #Use streamlit audio recorder
 
-def speech_to_text(audio_file):
+    if audio_bytes:
+         return audio_bytes
+    else :
+        return None
+
+def speech_to_text(audio_bytes):
     """Transcribes audio to text using SpeechRecognition."""
     r = sr.Recognizer()
     try:
-        # Load the audio file using pydub
-        sound = AudioSegment.from_file(audio_file)
-
-        # Split audio where silence is 700ms or greater and adjust other parameters as needed
+        # Use BytesIO to work with audio_bytes directly
+        audio_segment = AudioSegment.from_file(io.BytesIO(audio_bytes)) # Use BytesIO to read
+         # Split audio where silence is 700ms or greater and adjust other parameters as needed
         chunks = split_on_silence(
-            sound,
+            audio_segment,
             min_silence_len=500,  # Reduce the minimum silence length (milliseconds)
             silence_thresh=-40,   # Adjust the silence threshold (dBFS)
             keep_silence=250       # Keep some silence after each chunk (milliseconds)
@@ -163,22 +172,17 @@ def main():
             help="Upload a clear image of IC chip or verilog or VHDL code",
             key="upload_image" # Unique key for image uploader
         )
-        audio_file = st.file_uploader(
-            "Upload audio notes",
-            type=["wav", "mp3", "m4a"],
-            help="Upload design instructions, requirements, or explanations",
-            key="upload_audio" # Unique key for audio uploader
-        )
         
         speech_text = ""  # Initialize an empty variable for speech_text.
+        audio_bytes = record_audio()  #Record audio with streamlit 
 
         if uploaded_file:
             resized_image = resize_image_for_display(uploaded_file)
             st.image(resized_image, caption="Uploaded Image", use_container_width=False, width=MAX_IMAGE_WIDTH)
         
-        if audio_file:
+        if audio_bytes:
             with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
-                speech_text = speech_to_text(audio_file)
+                speech_text = speech_to_text(audio_bytes)
                 if speech_text:
                     st.write("Transcription:")
                     st.write(speech_text) # Print audio transcribed text
@@ -195,22 +199,18 @@ def main():
   
     with tab_camera:
         camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code", key="camera_input")  #Unique key
-        audio_file = st.file_uploader(
-        "Upload audio notes",
-        type=["wav", "mp3", "m4a"],
-        help="Upload design instructions, requirements, or explanations",
-        key="camera_audio"  #Unique key
-        )
+        audio_bytes = record_audio()  #Record audio with streamlit 
 
         speech_text = ""  # Initialize an empty variable for speech_text.
+
 
         if camera_photo:
             resized_image = resize_image_for_display(camera_photo)
             st.image(resized_image, caption="Captured Photo", use_container_width=False, width=MAX_IMAGE_WIDTH)
 
-        if audio_file:
+        if audio_bytes:
             with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
-                speech_text = speech_to_text(audio_file)
+                speech_text = speech_to_text(audio_bytes)
                 if speech_text:
                     st.write("Transcription:")
                     st.write(speech_text) # Print audio transcribed text
@@ -230,16 +230,13 @@ def main():
         st.subheader("Selected image")
         resized_image = resize_image_for_display(st.session_state.selected_example)
         st.image(resized_image, caption="Selected Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
-        audio_file = st.file_uploader(
-        "Upload audio notes",
-        type=["wav", "mp3", "m4a"],
-        help="Upload design instructions, requirements, or explanations", key ="example_audio"  #Unique key
-        )
+        
+        audio_bytes = record_audio()
         speech_text = "" # Initiliaze Text
 
-        if audio_file:
+        if audio_bytes:
             with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
-                speech_text = speech_to_text(audio_file)
+                speech_text = speech_to_text(audio_bytes)
                 if speech_text:
                     st.write("Transcription:")
                     st.write(speech_text) # Print audio transcribed text
