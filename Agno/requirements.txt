@@ -7,3 +7,6 @@ tavily-python
 gTTS
 
 #streamlit-components
+
+SpeechRecognition
+pydub
