@@ -191,6 +191,7 @@ def main():
             type=["jpg", "jpeg", "png"],
             help="Upload a clear image of IC chip or verilog or VHDL code",
             key="upload_image" # Unique key for image uploader
+        )
         
          #Display speech to text
         if 'speech_tab_text' in st.session_state:
