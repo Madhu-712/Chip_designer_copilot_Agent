@@ -164,7 +164,8 @@ def main():
     tab_examples, tab_upload, tab_camera = st.tabs([
         "📚 Example Products", 
         "📤 Upload Image", 
-        "📸 Take Photo"
+        "📸 Take Photo",
+        "🎤 Speech-to-Text" # New Tab
     ])
 
     with tab_examples:
@@ -243,6 +244,23 @@ def main():
                 if audio_html:
                     st.markdown(audio_html, unsafe_allow_html=True)
 
+    with tab_speech:
+        st.subheader("Speech-to-Text Interface")
+        
+        speech_audio_bytes = record_audio()
+        
+        if speech_audio_bytes:
+            with st.spinner("Transcribing Audio..."):
+                speech_tab_text = speech_to_text(speech_audio_bytes)
+                if speech_tab_text:
+                    st.write("Transcribed Text:")
+                    st.write(speech_tab_text)
+                    st.session_state.speech_tab_text = speech_tab_text  #Store for access later.
+
+        if 'speech_tab_text' in st.session_state:
+            st.write("You can use the transcribed text in other tabs now.")
+
+
     if st.session_state.selected_example:
         st.divider()
         st.subheader("Selected image")
@@ -258,6 +276,11 @@ def main():
                 if speech_text:
                     st.write("Transcription:")
                     st.write(speech_text) # Print audio transcribed text
+        
+        #Use transcription stored from speech tab
+        if 'speech_tab_text' in st.session_state:
+            speech_text = st.session_state.speech_tab_text
+
 
         if st.button("🔍 Analyze Example with Audio", key="analyze_example_audio") and not st.session_state.analyze_clicked: #Modified Button and ensure that click will not trigger again
             st.session_state.analyze_clicked = True #Ensure button can't trigger again
