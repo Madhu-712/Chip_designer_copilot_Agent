@@ -145,7 +145,8 @@ def main():
         st.session_state.custom_system_prompt = SYSTEM_PROMPT
     if 'custom_instructions' not in st.session_state:
         st.session_state.custom_instructions = INSTRUCTIONS
-
+    if 'speech_tab_text' not in st.session_state:
+        st.session_state.speech_tab_text = "" #Initialize in session state
 
     # Record initial instructions from user
     st.subheader("Record Initial Instructions")
@@ -161,7 +162,7 @@ def main():
                 st.session_state.custom_instructions = initial_instructions  #Setting instructions for session
 
 
-    tab_examples, tab_upload, tab_camera = st.tabs([
+    tab_examples, tab_upload, tab_camera, tab_speech = st.tabs([ #Fixed: Added tab_speech in assignment
         "📚 Example Products", 
         "📤 Upload Image", 
         "📸 Take Photo",
@@ -206,6 +207,9 @@ def main():
                     st.write("Transcription:")
                     st.write(speech_text) # Print audio transcribed text
 
+        #Use transcription stored from speech tab
+        if 'speech_tab_text' in st.session_state:
+            speech_text = st.session_state.speech_tab_text
         
         if uploaded_file and st.button("🔍 Analyze Uploaded Image with Audio", key="analyze_upload_audio"):
             temp_path = save_uploaded_file(uploaded_file)
@@ -233,6 +237,10 @@ def main():
                 if speech_text:
                     st.write("Transcription:")
                     st.write(speech_text) # Print audio transcribed text
+        
+        #Use transcription stored from speech tab
+        if 'speech_tab_text' in st.session_state:
+            speech_text = st.session_state.speech_tab_text
 
 
         if camera_photo and st.button("🔍 Analyze Captured Photo with Audio", key="analyze_camera_audio"):
@@ -257,8 +265,7 @@ def main():
                     st.write(speech_tab_text)
                     st.session_state.speech_tab_text = speech_tab_text  #Store for access later.
 
-        if 'speech_tab_text' in st.session_state:
-            st.write("You can use the transcribed text in other tabs now.")
+        st.write("You can use the transcribed text in other tabs now.")
 
 
     if st.session_state.selected_example:
