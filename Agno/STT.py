@@ -1,118 +1,260 @@
 
+# pip install phidata google-generativeai tavily-python
+# pip install streamlit
+# pip install gTTS
+# pip install SpeechRecognition pydub
+
 import streamlit as st
-import google.generativeai as genai
-from PIL import Image
-import io
 import os
-from tavily import TavilyClient
+from PIL import Image
+from io import BytesIO
+from phi.agent import Agent
+from phi.model.google import Gemini
+from phi.tools.tavily import TavilyTools
+from tempfile import NamedTemporaryFile
+from prompts import SYSTEM_PROMPT, INSTRUCTIONS
+from gtts import gTTS
+import base64
+import speech_recognition as sr
+from pydub import AudioSegment
+from pydub.silence import split_on_silence
 
-# Configure the Gemini API Key
-GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY")  # Replace with your actual API key or store in Streamlit secrets
-genai.configure(api_key=GOOGLE_API_KEY)
+os.environ['TAVILY_API_KEY'] = st.secrets['TAVILY_KEY']
+os.environ['GOOGLE_API_KEY'] = st.secrets['GEMINI_KEY']
 
-# Configure the Tavily API Key
-TAVILY_API_KEY = st.secrets.get("TAVILY_API_KEY")  # Store in Streamlit secrets
+MAX_IMAGE_WIDTH = 300
 
-# Initialize Tavily Client (only if an API key is available)
-tavily = None
-if TAVILY_API_KEY:
-    try:
-        tavily = TavilyClient(api_key=TAVILY_API_KEY)
-    except Exception as e:
-        st.error(f"Error initializing Tavily Client: {e}")
-        tavily = None # Ensure tavily is None if initialization fails
-else:
-    st.warning("Tavily API Key not found. Web search capabilities will be limited.")
-
-# Function to perform Gemini Multimodal analysis, potentially using Tavily for search
-def generate_gemini_report(image_bytes, stt_text, tavily_client=None):
-    """Generates a report for chip design analysis using Gemini's multimodal capabilities,
-    handling images of chip designs or Verilog/VHDL code, and potentially using Tavily for web search.
-    """
-
-    model = genai.GenerativeModel('gemini-1.5-flash') # or gemini-1.5-pro if you have access
-
-    # Prepare the prompt
-    prompt_parts = [
-        "You are an AI Chip Design Copilot. Analyze the following information to assist in chip design tasks. The image could be a chip design diagram/schematic/layout OR Verilog/VHDL code. The accompanying speech-to-text (STT) transcription likely contains design notes, requirements, or explanations.  Generate a concise summary report focused on chip design aspects, considering the image type.",
-        "If the image is code, focus on identifying potential errors, stylistic issues, areas for optimization, and understanding the code's functionality within a chip design context. If the image is a design diagram, focus on key elements, potential issues, and areas for improvement based on both the visual and textual information.",
-        "The report should be technically informative, aimed at assisting chip designers, and provide a clear overview of the design aspects. Consider the STT transcription as context for the image, regardless of the image type.",
-        "Optionally, use web search to find relevant information. For example, if the design mentions a specific technology or component, search for datasheets or application notes. If analyzing code, search for examples or explanations of specific functions or libraries. If you use search, clearly cite the source of the information.",
-        "Image:",
-        genai.Part.from_data(image_bytes, mime_type="image/png"),  # Or image/jpeg if applicable
-        "Speech-to-text Transcription:",
-        stt_text,
-    ]
-
-    # Example of using Tavily (conditional on tavily_client being available)
-    if tavily_client and stt_text: # Only search if we have a tavily client and STT input to search with
-        try:
-            search_results = tavily_client.search(query=stt_text, search_interval="7d")  # Search for the STT transcription itself
-            prompt_parts.append("Web Search Results (from Tavily):")
-            prompt_parts.append(search_results)
-        except Exception as e:
-            st.warning(f"Error during Tavily search: {e}")
-
-    try:
-        response = model.generate_content(prompt_parts)
-        return response.text  # Extract the generated text
-    except Exception as e:
-        return f"Error generating report: {e}"
-
-
-# Main Streamlit app
-def main():
-    st.title("AI Chip Design Copilot Agent")
-
-    # Sidebar for Uploading Image
-    st.sidebar.header("Chip Design Image/Code Upload")
-    uploaded_file = st.sidebar.file_uploader(
-        "Choose a chip design image (schematic, layout) OR Verilog/VHDL code...",
-        type=["jpg", "jpeg", "png"],
-    )
-
-    image_bytes = None  # Initialize image_bytes outside the if block
-
-    if uploaded_file is not None:
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Chip Design Image/Code", use_column_width=True)
-
-        # Convert PIL Image to bytes
-        img_bytes = io.BytesIO()
-        image.save(img_bytes, format="PNG")  # Or JPEG
-        image_bytes = img_bytes.getvalue()
-
-    analyze_image_button = st.button("Analyze Image")
-
-    # Sidebar for Speech-to-Text (STT)
-    st.sidebar.header("Speech-to-Text Design Notes")
-    stt_input = st.sidebar.text_area(
-        "Enter your design notes, requirements, or explanations (Speech-to-Text transcription):",
-        disabled=not analyze_image_button, #Disable speech to text until image has been analyzed.
-    )
-
-    generate_report_button = st.button("Generate Report", disabled=not (analyze_image_button and (uploaded_file is not None or stt_input))) #Disable button till image analyzed
-
-    # Report Generation
-    if generate_report_button:
-        st.header("Generated Chip Design Analysis Report")
-
-        if uploaded_file is None:
-            st.warning("No image uploaded. The report will be based solely on the design notes (Speech-to-Text input).")
-            image_bytes = None  # Ensure it's None for text-only analysis
-
-        if uploaded_file is not None and not stt_input:
-            st.warning("No design notes provided. The report will be based solely on the uploaded chip design image/code.")
-
-        try:
-            report = generate_gemini_report(image_bytes, stt_input, tavily_client=tavily)  # Pass the Tavily client
-            st.write(report)
-        except Exception as e:
-            st.error(f"Error generating report: {e}")
-
+def resize_image_for_display(image_file):
+    """Resize image for display only, returns bytes"""
+    if isinstance(image_file, str):
+        img = Image.open(image_file)
     else:
-        st.info("Upload a chip design image/code and click 'Analyze Image'. Then, enter design notes and click 'Generate Report'.")
+        img = Image.open(image_file)
+        image_file.seek(0)
+    
+    aspect_ratio = img.height / img.width
+    new_height = int(MAX_IMAGE_WIDTH * aspect_ratio)
+    img = img.resize((MAX_IMAGE_WIDTH, new_height), Image.Resampling.LANCZOS)
+    
+    buf = BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+@st.cache_resource
+def get_agent():
+    return Agent(
+        model=Gemini(id="gemini-2.0-flash-exp-image-generation"),
+        system_prompt=SYSTEM_PROMPT,
+        instructions=INSTRUCTIONS,
+        tools=[TavilyTools(api_key=os.getenv("TAVILY_API_KEY"))],
+        markdown=True,
+    )
+
+def analyze_image(image_path, speech_text=""):  # Modified to accept speech_text
+    agent = get_agent()
+    prompt = "Analyze the given image"
+    if speech_text:
+        prompt += f" considering the following spoken notes: {speech_text}" #Append speech text as prompt
+    with st.spinner('Analyzing image...'):
+        response = agent.run(
+            prompt,
+            images=[image_path],
+        )
+        st.markdown(response.content)
+        return response.content  # Return the content for TTS
+
+def save_uploaded_file(uploaded_file):
+    with NamedTemporaryFile(dir='.', suffix='.jpg', delete=False) as f:
+        f.write(uploaded_file.getbuffer())
+        return f.name
+
+
+def speech_to_text(audio_file):
+    """Transcribes audio to text using SpeechRecognition."""
+    r = sr.Recognizer()
+    try:
+        # Load the audio file using pydub
+        sound = AudioSegment.from_file(audio_file)
+
+        # Split audio where silence is 700ms or greater and adjust other parameters as needed
+        chunks = split_on_silence(
+            sound,
+            min_silence_len=500,  # Reduce the minimum silence length (milliseconds)
+            silence_thresh=-40,   # Adjust the silence threshold (dBFS)
+            keep_silence=250       # Keep some silence after each chunk (milliseconds)
+        )
+        whole_text = ""
+        for i, audio_chunk in enumerate(chunks, start=1):
+            # Export audio chunk and save it in a temporary file
+            with NamedTemporaryFile(suffix=".wav", delete=False) as temp_wav:
+                audio_chunk.export(temp_wav.name, format="wav")
+                
+                # Recognize the chunk
+                with sr.AudioFile(temp_wav.name) as source:
+                    audio = r.record(source)
+                try:
+                    text = r.recognize_google(audio)
+                except sr.UnknownValueError:
+                    text = "Could not understand audio"
+                except sr.RequestError as e:
+                    text = f"Could not request results from Google Speech Recognition service; {e}"
+
+                whole_text += text + " " # append text
+                os.unlink(temp_wav.name) #Remove temp file
+        return whole_text
+    except Exception as e:
+        st.error(f"Error transcribing audio: {e}")
+        return None
+
+
+
+def text_to_speech(text):
+    """Converts the given text to speech and returns a playable audio widget."""
+    try:
+        tts = gTTS(text=text, lang='en')
+        mp3_fp = BytesIO()
+        tts.write_to_fp(mp3_fp)
+        mp3_fp.seek(0)
+        data_url = "data:audio/mp3;base64," + base64.b64encode(mp3_fp.read()).decode()
+        return f"""
+        <audio controls autoplay>
+            <source src="{data_url}" type="audio/mp3">
+        </audio>
+        """
+    except Exception as e:
+        st.error(f"Error generating TTS: {e}")
+        return None
+
+
+def main():
+    st.title("🤖🖥 Design Copilot Agent")
+    
+    if 'selected_example' not in st.session_state:
+        st.session_state.selected_example = None
+    if 'analyze_clicked' not in st.session_state:
+        st.session_state.analyze_clicked = False
+
+    tab_examples, tab_upload, tab_camera = st.tabs([
+        "📚 Example Products", 
+        "📤 Upload Image", 
+        "📸 Take Photo"
+    ])
+
+    with tab_examples:
+        example_images = {
+            "Chip 1": "images/Chip 1.jpg",
+            "Chip 2": "images/Chip 2.jpg",
+            "Code 1": "images/Code 1.jpg",
+            "Code 2": "images/Code 2.jpg"
+        }
+        
+        cols = st.columns(4)
+        for idx, (name, path) in enumerate(example_images.items()):
+            with cols[idx]:
+                if st.button(name, use_container_width=True):
+                    st.session_state.selected_example = path
+                    st.session_state.analyze_clicked = False #Reset click
+
+
+    with tab_upload:
+        uploaded_file = st.file_uploader(
+            "Upload product image", 
+            type=["jpg", "jpeg", "png"],
+            help="Upload a clear image of IC chip or verilog or VHDL code"
+        )
+        audio_file = st.file_uploader(
+            "Upload audio notes",
+            type=["wav", "mp3", "m4a"],
+            help="Upload design instructions, requirements, or explanations"
+        )
+        
+        speech_text = ""  # Initialize an empty variable for speech_text.
+
+        if uploaded_file:
+            resized_image = resize_image_for_display(uploaded_file)
+            st.image(resized_image, caption="Uploaded Image", use_container_width=False, width=MAX_IMAGE_WIDTH)
+        
+        if audio_file:
+            with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
+                speech_text = speech_to_text(audio_file)
+                if speech_text:
+                    st.write("Transcription:")
+                    st.write(speech_text) # Print audio transcribed text
+
+        
+        if uploaded_file and st.button("🔍 Analyze Uploaded Image with Audio", key="analyze_upload_audio"):
+            temp_path = save_uploaded_file(uploaded_file)
+            analysis_result = analyze_image(temp_path, speech_text) #Pass speech text to analysis
+            os.unlink(temp_path)
+            if analysis_result:  # Check if there's text output
+                audio_html = text_to_speech(analysis_result)
+                if audio_html:
+                    st.markdown(audio_html, unsafe_allow_html=True)
+  
+    with tab_camera:
+        camera_photo = st.camera_input("Take a picture of the IC chip or verilog or VHDL code")
+        audio_file = st.file_uploader(
+        "Upload audio notes",
+        type=["wav", "mp3", "m4a"],
+        help="Upload design instructions, requirements, or explanations"
+        )
+
+        speech_text = ""  # Initialize an empty variable for speech_text.
+
+        if camera_photo:
+            resized_image = resize_image_for_display(camera_photo)
+            st.image(resized_image, caption="Captured Photo", use_container_width=False, width=MAX_IMAGE_WIDTH)
+
+        if audio_file:
+            with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
+                speech_text = speech_to_text(audio_file)
+                if speech_text:
+                    st.write("Transcription:")
+                    st.write(speech_text) # Print audio transcribed text
+
+
+        if camera_photo and st.button("🔍 Analyze Captured Photo with Audio", key="analyze_camera_audio"):
+            temp_path = save_uploaded_file(camera_photo)
+            analysis_result = analyze_image(temp_path, speech_text)  # Pass speech text to analysis
+            os.unlink(temp_path)
+            if analysis_result:  # Check if there's text output
+                audio_html = text_to_speech(analysis_result)
+                if audio_html:
+                    st.markdown(audio_html, unsafe_allow_html=True)
+
+    if st.session_state.selected_example:
+        st.divider()
+        st.subheader("Selected image")
+        resized_image = resize_image_for_display(st.session_state.selected_example)
+        st.image(resized_image, caption="Selected Example", use_container_width=False, width=MAX_IMAGE_WIDTH)
+        audio_file = st.file_uploader(
+        "Upload audio notes",
+        type=["wav", "mp3", "m4a"],
+        help="Upload design instructions, requirements, or explanations", key ="example_audio"
+        )
+        speech_text = "" # Initiliaze Text
+
+        if audio_file:
+            with st.spinner("Transcribing Audio..."): # Add a spinner to show that audio is processing
+                speech_text = speech_to_text(audio_file)
+                if speech_text:
+                    st.write("Transcription:")
+                    st.write(speech_text) # Print audio transcribed text
+
+        if st.button("🔍 Analyze Example with Audio", key="analyze_example_audio") and not st.session_state.analyze_clicked: #Modified Button and ensure that click will not trigger again
+
+            st.session_state.analyze_clicked = True #Ensure button can't trigger again
+            analysis_result = analyze_image(st.session_state.selected_example, speech_text) #Pass speech text to analysis
+            if analysis_result:  # Check if there's text output
+                audio_html = text_to_speech(analysis_result)
+                if audio_html:
+                    st.markdown(audio_html, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
+    st.set_page_config(
+        page_title="Design copilot/assistant Agent",
+        layout="wide",
+        initial_sidebar_state="collapsed"
+    )
     main()
