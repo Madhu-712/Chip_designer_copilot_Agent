@@ -2,8 +2,8 @@
 import streamlit as st
 import speech_recognition as sr
 from io import StringIO
-import pyverilog.vparser.parser as verilog_parser
-from pyverilog.ast_code_generator.codegen import ASTCodeGenerator
+#import pyverilog.vparser.parser as verilog_parser
+#from pyverilog.ast_code_generator.codegen import ASTCodeGenerator
 
 def analyze_verilog_code(verilog_code):
     """
@@ -11,7 +11,7 @@ def analyze_verilog_code(verilog_code):
     """
     try:
         # Parse the Verilog code
-        ast, _ = verilog_parser.parse([verilog_code])
+        #ast, _ = verilog_parser.parse([verilog_code])
         
         # Generate report
         report = "### Verilog Code Analysis Report\n"
