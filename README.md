@@ -19,7 +19,7 @@ Refer to Demo sample queries file to test the below apps.
 - **Text-to-Speech (TTS)**: [chip67890.streamlit.app](https://chip67890.streamlit.app)
 - **LangGraph Chatbot**: [chatbotchip.streamlit.app](https://chatbotchip.streamlit.app)
 - **LangGraph Agentic Workflow App**: [langgraphapp.streamlit.app](https://langgraphapp.streamlit.app)
-  -**Chatbot App**:
+  -**Chatbot App Sophie**:
 https://agent.jotform.com/01966c6ed9a978f1a49fd4bb7c373e7b8c4b
 
 -**Firebase studio**:
