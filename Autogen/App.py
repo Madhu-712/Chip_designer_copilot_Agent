@@ -14,6 +14,8 @@ except ImportError:
     subprocess.run(["pip", "install", "autogen"])
     import autogen
 
+
+
 # Ollama installation and setup
 try:
     import ollama
@@ -22,6 +24,12 @@ except ImportError:
     subprocess.run(["curl", "-fsSL", "https://ollama.com/install.sh", "|", "sh"])
     import ollama
 
+try:
+    subprocess.Popen(["ollama", "serve"])
+except FileNotFoundError:
+    st.error("Ollama not found in PATH. Please install or add to PATH.")
+except OSError as e:
+    st.error(f"Error starting Ollama server: {e}")
 subprocess.Popen(["ollama", "serve"])
 subprocess.run(["ollama", "pull", "llama3.2:1b"])
 
