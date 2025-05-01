@@ -1,0 +1,7 @@
+
+autogen
+streamlit
+chromadb
+Pillow # PIL (Pillow) is required by autogen
+termcolor
+ollama
