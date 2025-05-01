@@ -28,11 +28,11 @@ https://agent.jotform.com/01966c6ed9a978f1a49fd4bb7c373e7b8c4b
 ---
 
 ## 📁 Folder Structure
-
 ```
 Chip_designer_copilot_Agent/
 │
 ├── Agno/           # Multimodal copilot using Agno framework
+├── Autogen/        # Agent customization and orchestration with Autogen
 ├── CrewAI/         # Multi-agent collaboration setup (CrewAI agents and flows)
 ├── LangGraph/      # Agentic workflows and graph-based chatbot logic
 ├── images/         # UI screenshots, architecture diagrams, and visuals
