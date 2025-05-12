@@ -12,3 +12,6 @@ Clock period minimization techniques
 HLS resource binding ,allocation and scheduling 
 Explain boolean minimization and technology mapping  
 Explain ILP(Instruction level parallelism) and pipelining techniques  
+Can you tell how I can create a design library in Cadence Virtuoso
+Can you tell me the syntax of the check_timing command for Synopsys Design Compiler
+Write a simple Verilog module for a 16-to-1 multiplexer (MUX) that takes a 16-bit input vector and a 4-bit select signal to produce a single-bit output
