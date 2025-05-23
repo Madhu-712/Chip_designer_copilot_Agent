@@ -133,7 +133,7 @@ https://1drv.ms/p/c/58306c633850707f/EROtnP0L1vpLsIBDvSeA0FEBWaz6jTpCjDEGt0DvOjt
 *Entrepreneurship track:
 https://1drv.ms/p/c/58306c633850707f/EcBbUiHXy-NLsRni21bblFwB3aIzt5SrFOFcK7oq2iiFLQ
 
-* Pitch deck pptx:
+*Pitch deck pptx:
 https://docs.google.com/presentation/d/11tON47KfqyaRusnFgV0mDM0D3fxXYMjB/edit?usp=drivesdk&ouid=108106957336460406665&rtpof=true&sd=true
 
 *Live Apps demo link:
