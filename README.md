@@ -124,14 +124,26 @@ While this innovation product is freeing engineers to focus on chip quality and 
 
 ##References:
 
-Medium post:
+*Medium post:
 https://medium.com/@madhu.712/how-ai-agents-are-revolutionizing-hardware-design-submitted-for-agentx-llm-agents-mooc-61c384db480f
+
+*Research track:
+https://1drv.ms/p/c/58306c633850707f/EROtnP0L1vpLsIBDvSeA0FEBWaz6jTpCjDEGt0DvOjtQBA
+
+*Entrepreneurship track:
+https://1drv.ms/p/c/58306c633850707f/EcBbUiHXy-NLsRni21bblFwB3aIzt5SrFOFcK7oq2iiFLQ
+
+*live demo link:
+https://drive.google.com/file/d/12A85JasOD5UqeiVZLL196s8mMG11lukC/view?usp=drivesdk
 
 Research references:
 
 *IEEE Xplore: Focus on journals like IEEE Transactions on Computer-Aided Design of Integrated Circuits and Systems (TCAD), IEEE Transactions on Very Large Scale Integration (VLSI) Systems, and conference proceedings like DAC, ICCAD, ISSCC.
 
 *ACM Digital Library: Look for publications in journals and conferences relevant to computer architecture and design automation.
+
+
+
 
   
 
